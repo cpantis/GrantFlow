@@ -90,9 +90,9 @@ export function ProjectsPage() {
                 <Input value={form.titlu} onChange={(e) => setForm({ ...form, titlu: e.target.value })} required data-testid="project-title-input" />
               </div>
               <div className="space-y-2">
-                <Label>Organizație</Label>
+                <Label>Firmă</Label>
                 <Select value={form.organizatie_id} onValueChange={(v) => setForm({ ...form, organizatie_id: v })}>
-                  <SelectTrigger data-testid="project-org-select"><SelectValue placeholder="Selectează organizația" /></SelectTrigger>
+                  <SelectTrigger data-testid="project-org-select"><SelectValue placeholder="Selectează firma" /></SelectTrigger>
                   <SelectContent>{orgs.map((o) => <SelectItem key={o.id} value={o.id}>{o.denumire}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
