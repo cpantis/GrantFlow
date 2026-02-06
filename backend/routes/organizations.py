@@ -1,11 +1,13 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 from pydantic import BaseModel, Field
 from typing import Optional, List
 import uuid
+import os
 from datetime import datetime, timezone
 from middleware.auth_middleware import get_current_user, require_org_permission
 from services.onrc_service import lookup_cui, get_certificat_constatator
 from services.anaf_service import get_financial_data, get_financial_history, check_obligatii_restante
+from services.ocr_service import process_ocr
 
 router = APIRouter(prefix="/api/organizations", tags=["organizations"])
 db = None
