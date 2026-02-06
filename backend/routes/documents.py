@@ -81,6 +81,16 @@ async def upload_document(
         "timestamp": datetime.now(timezone.utc).isoformat()
     })
     doc.pop("_id", None)
+
+    # Auto-process: OCR + extract data + take actions
+    try:
+        auto_result = await auto_process_upload(doc_id, tip, file.filename, organizatie_id, project_id, db)
+        doc["auto_process"] = auto_result.get("actions_taken", [])
+        doc["ocr_status"] = auto_result.get("ocr_result", {}).get("status", "pending")
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Auto-process failed for {doc_id}: {e}")
+
     return doc
 
 @router.get("")
