@@ -518,10 +518,12 @@ class GrantFlowAPITester:
     def run_all_tests(self):
         """Run all backend API tests"""
         print("="*60)
-        print("🚀 STARTING GRANTFLOW BACKEND API TESTING")
+        print("🚀 STARTING GRANTFLOW BACKEND API TESTING - ITERATION 2")
+        print("   Testing RBAC, Email Verification, Password Reset, OCR")
         print("="*60)
         print(f"Base URL: {self.base_url}")
         print(f"Test Email: {self.test_email}")
+        print(f"Second User Email: {self.second_user_email}")
         print(f"Test Date: {datetime.now().isoformat()}")
         
         # Authentication flow
@@ -538,25 +540,54 @@ class GrantFlowAPITester:
             
         self.test_auth_me()
         
-        # Organization tests
+        # Email verification tests
         print("\n" + "="*40)
-        print("🏢 ORGANIZATION TESTS")
+        print("📧 EMAIL VERIFICATION TESTS")
         print("="*40)
         
-        self.test_org_create()
+        self.test_email_verify()
+        self.test_email_resend_verification()
+        self.test_login_email_verified_status()
+        
+        # Password reset tests
+        print("\n" + "="*40)
+        print("🔑 PASSWORD RESET TESTS")
+        print("="*40)
+        
+        self.test_password_reset_request()
+        self.test_password_reset_confirm()
+        self.test_login_with_new_password()
+        self.test_change_password()
+        
+        # RBAC setup tests
+        print("\n" + "="*40)
+        print("👥 RBAC SETUP TESTS")
+        print("="*40)
+        
+        self.test_rbac_register_second_user()
+        
+        # Organization tests with RBAC
+        print("\n" + "="*40)
+        print("🏢 ORGANIZATION TESTS (RBAC)")
+        print("="*40)
+        
+        self.test_rbac_owner_create_org()  # Owner creates org
         self.test_org_list()
         self.test_org_detail()
         self.test_org_financial()
+        self.test_rbac_owner_manage_members()  # Owner adds member
+        self.test_rbac_imputernicit_limited_access()  # Member can't manage members
         
-        # Project tests
+        # Project tests with RBAC
         print("\n" + "="*40)
-        print("📋 PROJECT TESTS")
+        print("📋 PROJECT TESTS (RBAC)")
         print("="*40)
         
-        self.test_project_create()
+        self.test_rbac_owner_create_project()
         self.test_project_list()
         self.test_project_states()
-        self.test_project_transition()
+        self.test_rbac_imputernicit_view_project()  # Member can view
+        self.test_rbac_project_transition_owner_only()  # Only owner can transition
         
         # Document tests
         print("\n" + "="*40)
@@ -565,6 +596,15 @@ class GrantFlowAPITester:
         
         self.test_document_upload()
         self.test_document_list()
+        
+        # OCR tests
+        print("\n" + "="*40)
+        print("🔍 OCR TESTS (MOCKED)")
+        print("="*40)
+        
+        self.test_ocr_trigger()
+        self.test_ocr_get_results()
+        self.test_ocr_correct_field()
         
         # Compliance tests
         print("\n" + "="*40)
