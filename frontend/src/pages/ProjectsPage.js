@@ -37,17 +37,19 @@ export function ProjectsPage() {
   const [form, setForm] = useState({ titlu: '', organizatie_id: '', program_finantare: '', descriere: '', buget_estimat: '' });
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
+  const { activeFirm } = useFirm();
 
   const load = async () => {
     try {
-      const [pRes, oRes] = await Promise.all([api.get('/projects'), api.get('/organizations')]);
+      const params = activeFirm ? `?organizatie_id=${activeFirm.id}` : '';
+      const [pRes, oRes] = await Promise.all([api.get(`/projects${params}`), api.get('/organizations')]);
       setProjects(pRes.data || []);
       setOrgs(oRes.data || []);
     } catch (e) { console.error(e); }
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [activeFirm]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
