@@ -13,6 +13,7 @@ import {
   ArrowLeft, ArrowRight, Send, FileText, Shield, Bot, Clock,
   TrendingUp, AlertTriangle, CheckCircle, XCircle, Milestone, DollarSign, MessageSquare
 } from 'lucide-react';
+import { AiMessage } from '@/components/shared/AiMessage';
 
 const STATE_COLORS = {
   draft: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/20',
