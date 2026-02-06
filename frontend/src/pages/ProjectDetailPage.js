@@ -132,6 +132,9 @@ export function ProjectDetailPage() {
           </div>
           <p className="text-muted-foreground text-sm">{project.organizatie_denumire} &middot; {project.program_finantare}</p>
         </div>
+        <Link to={`/projects/${id}/writing`}>
+          <Button data-testid="open-writing-btn"><FileText className="w-4 h-4 mr-2" />Scriere proiect</Button>
+        </Link>
       </div>
 
       {/* State Machine */}
