@@ -94,9 +94,12 @@ async def get_organization(org_id: str, current_user: dict = Depends(get_current
     org = await db.organizations.find_one({"id": org_id}, {"_id": 0})
     if not org:
         raise HTTPException(status_code=404, detail="Organizație negăsită")
-    is_member = any(m["user_id"] == current_user["user_id"] for m in org.get("members", []))
-    if not is_member:
-        raise HTTPException(status_code=403, detail="Acces interzis")
+    role_info = await require_org_permission(current_user["user_id"], org_id, "read")
+    # Consultants get limited view - no financial data
+    if role_info["role"] == "consultant":
+        org.pop("date_financiare", None)
+        org.pop("certificat_constatator", None)
+        org.pop("authorizations", None)
     return org
 
 @router.post("/{org_id}/members")
