@@ -103,11 +103,11 @@ export function OrganizationsPage() {
                       <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{org.judet}</span>
                     </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-sm text-muted-foreground">
                     {org.caen_principal?.descriere}
                   </div>
                   <div className="flex items-center justify-between pt-2 border-t border-border">
-                    <span className="text-xs text-muted-foreground">{org.forma_juridica} &middot; {org.nr_angajati} angajați</span>
+                    <span className="text-sm text-muted-foreground">{org.forma_juridica} &middot; {org.nr_angajati} angajați</span>
                     <ArrowUpRight className="w-4 h-4 text-muted-foreground" />
                   </div>
                 </CardContent>
