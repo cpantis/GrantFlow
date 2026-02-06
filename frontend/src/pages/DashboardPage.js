@@ -24,12 +24,14 @@ export function DashboardPage() {
   const [projects, setProjects] = useState([]);
   const [orgs, setOrgs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { activeFirm } = useFirm();
 
   useEffect(() => {
     const load = async () => {
       try {
+        const params = activeFirm ? `?organizatie_id=${activeFirm.id}` : '';
         const [pRes, oRes, aRes] = await Promise.all([
-          api.get('/projects'),
+          api.get(`/projects${params}`),
           api.get('/organizations'),
           api.get('/admin/dashboard').catch(() => ({ data: null }))
         ]);
