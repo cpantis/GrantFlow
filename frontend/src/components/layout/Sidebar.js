@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFirm } from '@/contexts/FirmContext';
 import {
   LayoutDashboard, Building2, FolderKanban, FileText, Shield,
-  Users, Settings, LogOut, ChevronLeft, ChevronRight, Bot, Menu
+  Users, Settings, LogOut, ChevronLeft, ChevronRight, Bot, ChevronsUpDown, Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const navItems = [
   { path: '/dashboard', label: 'Panou', icon: LayoutDashboard },
@@ -22,6 +24,8 @@ export function Sidebar({ collapsed, onToggle }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { firms, activeFirm, selectFirm } = useFirm();
+  const [firmPopoverOpen, setFirmPopoverOpen] = useState(false);
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -40,6 +44,44 @@ export function Sidebar({ collapsed, onToggle }) {
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </Button>
         </div>
+
+        {/* Firm Selector */}
+        {!collapsed && firms.length > 0 && (
+          <div className="px-3 py-3 border-b border-border">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5 px-1">Firmă activă</p>
+            <Popover open={firmPopoverOpen} onOpenChange={setFirmPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-between h-auto py-2 px-3 text-left"
+                  data-testid="firm-selector"
+                >
+                  <div className="truncate">
+                    <p className="text-sm font-semibold truncate">{activeFirm?.denumire || 'Selectează firma'}</p>
+                    {activeFirm?.cui && <p className="text-[11px] text-muted-foreground">CUI: {activeFirm.cui}</p>}
+                  </div>
+                  <ChevronsUpDown className="w-4 h-4 text-muted-foreground flex-shrink-0 ml-2" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-1" align="start">
+                {firms.map((f) => (
+                  <button
+                    key={f.id}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-accent flex items-center gap-2 ${activeFirm?.id === f.id ? 'bg-accent' : ''}`}
+                    onClick={() => { selectFirm(f); setFirmPopoverOpen(false); }}
+                    data-testid={`firm-option-${f.id}`}
+                  >
+                    <div className="flex-1 truncate">
+                      <p className="font-medium truncate">{f.denumire}</p>
+                      <p className="text-[11px] text-muted-foreground">CUI: {f.cui}</p>
+                    </div>
+                    {activeFirm?.id === f.id && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
+                  </button>
+                ))}
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
 
         <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
