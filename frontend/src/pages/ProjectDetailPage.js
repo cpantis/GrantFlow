@@ -12,7 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import {
   ArrowLeft, ArrowRight, Send, FileText, Shield, Bot, Clock,
   TrendingUp, AlertTriangle, CheckCircle, XCircle, Milestone, DollarSign, MessageSquare,
-  PenTool, Loader2
+  PenTool, Loader2, Zap, CircleDot
 } from 'lucide-react';
 import { AiMessage } from '@/components/shared/AiMessage';
 
