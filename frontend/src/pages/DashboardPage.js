@@ -135,7 +135,7 @@ export function DashboardPage() {
                   <Card className="bg-card border-border hover:border-primary/30 transition-colors duration-200">
                     <CardContent className="p-4 flex items-center justify-between">
                       <div className="space-y-1">
-                        <p className="font-medium">{p.titlu}</p>
+                        <p className="font-semibold text-[15px]">{p.titlu}</p>
                         <p className="text-sm text-muted-foreground">{p.organizatie_denumire} &middot; {p.program_finantare}</p>
                       </div>
                       <div className="flex items-center gap-3">
