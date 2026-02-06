@@ -33,6 +33,12 @@ export function DocumentsPage() {
   const [uploading, setUploading] = useState(false);
   const [filter, setFilter] = useState({ organizatie_id: '', tip: '', faza: '' });
   const [uploadForm, setUploadForm] = useState({ organizatie_id: '', project_id: '', tip: 'altele', faza: '', descriere: '' });
+  const [ocrOpen, setOcrOpen] = useState(false);
+  const [ocrData, setOcrData] = useState(null);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState(null);
+  const [correcting, setCorrecting] = useState(null);
+  const [correctedValue, setCorrectedValue] = useState('');
   const fileRef = useRef(null);
 
   const load = async () => {
