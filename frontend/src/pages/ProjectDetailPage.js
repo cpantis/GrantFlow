@@ -91,6 +91,15 @@ export function ProjectDetailPage() {
     setGenerating(null);
   };
 
+  const runOrchestrator = async () => {
+    setOrchestratorLoading(true);
+    try {
+      const res = await api.post(`/compliance/orchestrator/${id}`);
+      setOrchestratorReport(res.data);
+    } catch (e) { console.error(e); }
+    setOrchestratorLoading(false);
+  };
+
   const handleTransition = async (newState) => {
     setTransitionLoading(true);
     try {
