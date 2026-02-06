@@ -12,6 +12,8 @@ import { DocumentsPage } from '@/pages/DocumentsPage';
 import { CompliancePage } from '@/pages/CompliancePage';
 import { MarketplacePage } from '@/pages/MarketplacePage';
 import { AdminPage } from '@/pages/AdminPage';
+import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
+import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
 import '@/App.css';
 
 function ProtectedRoute({ children }) {
