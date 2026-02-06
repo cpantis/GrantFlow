@@ -42,7 +42,7 @@ export function DashboardPage() {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [activeFirm]);
 
   const byState = projects.reduce((acc, p) => { acc[p.stare] = (acc[p.stare] || 0) + 1; return acc; }, {});
 
