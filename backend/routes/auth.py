@@ -223,6 +223,8 @@ async def request_reset_password(req: ResetPasswordRequest):
     })
 
     logger.info(f"[EMAIL MOCK] Password reset token for {req.email}: {reset_token}")
+    # Send password reset email
+    await send_password_reset_email(req.email, reset_token, user.get('prenume', ''))
     return {"message": "Dacă adresa de email există, veți primi un link de resetare.", "reset_token": reset_token}
 
 @router.post("/reset-password/confirm")
