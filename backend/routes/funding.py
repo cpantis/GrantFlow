@@ -214,6 +214,16 @@ async def generate_draft(req: GenerateDraftRequest, current_user: dict = Depends
         section=section
     )
 
+    content_text = result.get("result", "")
+
+    # Generate PDF
+    pdf_filename = generate_pdf(
+        title=template["label"],
+        content=content_text,
+        firm_name=(org or {}).get("denumire", ""),
+        project_name=project.get("titlu", "")
+    )
+
     draft_id = str(uuid.uuid4())
     draft = {
         "id": draft_id,
@@ -221,14 +231,142 @@ async def generate_draft(req: GenerateDraftRequest, current_user: dict = Depends
         "template_id": req.template_id,
         "template_label": template["label"],
         "sectiune": section,
-        "continut": result.get("result", ""),
+        "continut": content_text,
+        "pdf_filename": pdf_filename,
         "status": "draft",
         "versiune": 1,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "created_by": current_user["user_id"]
     }
     await db.drafts.insert_one(draft)
+
+    # Auto-save to Documents collection
+    doc_id = str(uuid.uuid4())
+    doc_entry = {
+        "id": doc_id,
+        "filename": f"{template['label']}.pdf",
+        "stored_name": pdf_filename,
+        "file_size": os.path.getsize(os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "generated", pdf_filename)),
+        "content_type": "application/pdf",
+        "organizatie_id": project.get("organizatie_id"),
+        "project_id": req.project_id,
+        "tip": template.get("categorie", "principal"),
+        "faza": "depunere",
+        "status": "draft",
+        "descriere": f"Generat automat - {template['label']}",
+        "versiune": 1,
+        "versions": [{"versiune": 1, "filename": f"{template['label']}.pdf", "stored_name": pdf_filename, "uploaded_at": datetime.now(timezone.utc).isoformat(), "uploaded_by": current_user["user_id"]}],
+        "ocr_status": "not_applicable",
+        "ocr_data": None,
+        "tags": ["generat_ai", template["id"]],
+        "draft_id": draft_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["user_id"]
+    }
+    await db.documents.insert_one(doc_entry)
+
     draft.pop("_id", None)
+    draft["document_id"] = doc_id
+    draft["pdf_url"] = f"/api/funding/drafts/download/{pdf_filename}"
+    return draft
+
+@router.get("/drafts/download/{filename}")
+async def download_draft_pdf(filename: str):
+    filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "generated", filename)
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="Fișier negăsit")
+    return FileResponse(filepath, media_type="application/pdf", filename=filename)
+
+@router.post("/generate-from-upload")
+async def generate_from_uploaded_template(
+    file: UploadFile = File(...),
+    project_id: str = Form(...),
+    titlu: str = Form(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload a custom template (PDF) and let AI fill it based on firm/project data."""
+    project = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proiect negăsit")
+    org = await db.organizations.find_one({"id": project.get("organizatie_id")}, {"_id": 0})
+
+    # Save uploaded template
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "templates")
+    os.makedirs(upload_dir, exist_ok=True)
+    tpl_id = str(uuid.uuid4())
+    ext = os.path.splitext(file.filename)[1] if file.filename else ".pdf"
+    safe_name = f"{tpl_id}{ext}"
+    tpl_path = os.path.join(upload_dir, safe_name)
+    content = await file.read()
+    with open(tpl_path, "wb") as f:
+        f.write(content)
+
+    # Extract text from template (basic - for PDF we describe structure)
+    template_desc = f"Template încărcat: {file.filename} ({len(content)} bytes). Titlu: {titlu}."
+
+    data = {
+        "proiect": {k: project.get(k) for k in ["titlu", "descriere", "buget_estimat", "program_finantare", "tip_proiect", "tema_proiect", "obiective", "achizitii", "locatie_implementare"]},
+        "firma": {k: (org or {}).get(k) for k in ["denumire", "cui", "adresa", "judet", "forma_juridica", "nr_reg_com", "caen_principal", "nr_angajati", "data_infiintare", "telefon"]}
+    }
+
+    result = await generate_document_section(
+        template=template_desc,
+        data=data,
+        section=titlu
+    )
+
+    content_text = result.get("result", "")
+    pdf_filename = generate_pdf(
+        title=titlu,
+        content=content_text,
+        firm_name=(org or {}).get("denumire", ""),
+        project_name=project.get("titlu", "")
+    )
+
+    draft_id = str(uuid.uuid4())
+    draft = {
+        "id": draft_id,
+        "project_id": project_id,
+        "template_id": "custom_upload",
+        "template_label": titlu,
+        "template_filename": file.filename,
+        "continut": content_text,
+        "pdf_filename": pdf_filename,
+        "status": "draft",
+        "versiune": 1,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["user_id"]
+    }
+    await db.drafts.insert_one(draft)
+
+    # Auto-save to Documents
+    doc_id = str(uuid.uuid4())
+    await db.documents.insert_one({
+        "id": doc_id,
+        "filename": f"{titlu}.pdf",
+        "stored_name": pdf_filename,
+        "file_size": os.path.getsize(os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "generated", pdf_filename)),
+        "content_type": "application/pdf",
+        "organizatie_id": project.get("organizatie_id"),
+        "project_id": project_id,
+        "tip": "altele",
+        "faza": "depunere",
+        "status": "draft",
+        "descriere": f"Generat din template: {file.filename}",
+        "versiune": 1,
+        "versions": [{"versiune": 1, "filename": f"{titlu}.pdf", "stored_name": pdf_filename, "uploaded_at": datetime.now(timezone.utc).isoformat(), "uploaded_by": current_user["user_id"]}],
+        "ocr_status": "not_applicable",
+        "tags": ["generat_ai", "custom_template"],
+        "draft_id": draft_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["user_id"]
+    })
+
+    draft.pop("_id", None)
+    draft["document_id"] = doc_id
+    draft["pdf_url"] = f"/api/funding/drafts/download/{pdf_filename}"
     return draft
 
 @router.get("/drafts/{project_id}")
