@@ -134,6 +134,204 @@ class GrantFlowAPITester:
         success, data, error = self.api_request('GET', 'auth/me', expected_status=200)
         return self.log_test("Get User Profile", "GET", "/auth/me", 200, success, data, error)
 
+    # ============ EMAIL VERIFICATION TESTS ============
+    
+    def test_email_verify(self):
+        """Test email verification"""
+        if not self.verification_token:
+            return self.log_test("Email Verification", "POST", "/auth/verify-email", 200, False, None, "No verification token available")
+        
+        verify_data = {"token": self.verification_token}
+        success, data, error = self.api_request('POST', 'auth/verify-email', verify_data, expected_status=200)
+        return self.log_test("Email Verification", "POST", "/auth/verify-email", 200, success, data, error)
+
+    def test_email_resend_verification(self):
+        """Test resend email verification"""
+        success, data, error = self.api_request('POST', 'auth/resend-verification', expected_status=200)
+        result = self.log_test("Resend Email Verification", "POST", "/auth/resend-verification", 200, success, data, error)
+        
+        if success and data:
+            self.verification_token = data.get('verification_token')
+            
+        return result
+
+    def test_login_email_verified_status(self):
+        """Test login returns email_verified status"""
+        login_data = {"email": self.test_email, "password": self.test_password}
+        success, data, error = self.api_request('POST', 'auth/login', login_data, expected_status=200)
+        result = self.log_test("Login Email Verified Status", "POST", "/auth/login", 200, success, data, error)
+        
+        if success and data and data.get('user'):
+            has_email_verified = 'email_verified' in data['user']
+            if not has_email_verified:
+                result = False
+                error = "Login response missing email_verified field"
+                
+        return result
+
+    # ============ PASSWORD RESET TESTS ============
+    
+    def test_password_reset_request(self):
+        """Test password reset request"""
+        reset_data = {"email": self.test_email}
+        success, data, error = self.api_request('POST', 'auth/reset-password', reset_data, expected_status=200)
+        result = self.log_test("Password Reset Request", "POST", "/auth/reset-password", 200, success, data, error)
+        
+        if success and data:
+            self.reset_token = data.get('reset_token')
+            
+        return result
+
+    def test_password_reset_confirm(self):
+        """Test password reset confirmation"""
+        if not self.reset_token:
+            return self.log_test("Password Reset Confirm", "POST", "/auth/reset-password/confirm", 200, False, None, "No reset token available")
+            
+        new_password = "NewTestPass123!"
+        confirm_data = {"token": self.reset_token, "new_password": new_password}
+        success, data, error = self.api_request('POST', 'auth/reset-password/confirm', confirm_data, expected_status=200)
+        result = self.log_test("Password Reset Confirm", "POST", "/auth/reset-password/confirm", 200, success, data, error)
+        
+        if success:
+            # Update password for future tests
+            self.test_password = new_password
+            self.test_user["password"] = new_password
+            
+        return result
+
+    def test_login_with_new_password(self):
+        """Test login with new password after reset"""
+        login_data = {"email": self.test_email, "password": self.test_password}
+        success, data, error = self.api_request('POST', 'auth/login', login_data, expected_status=200)
+        result = self.log_test("Login With New Password", "POST", "/auth/login", 200, success, data, error)
+        
+        if success and data:
+            self.token = data.get('token')
+            
+        return result
+
+    def test_change_password(self):
+        """Test change password with current password"""
+        current_password = self.test_password
+        new_password = "ChangedTestPass123!"
+        change_data = {"current_password": current_password, "new_password": new_password}
+        success, data, error = self.api_request('POST', 'auth/change-password', change_data, expected_status=200)
+        result = self.log_test("Change Password", "POST", "/auth/change-password", 200, success, data, error)
+        
+        if success:
+            # Update password for future tests
+            self.test_password = new_password
+            self.test_user["password"] = new_password
+            
+        return result
+
+    # ============ RBAC TESTS ============
+    
+    def test_rbac_register_second_user(self):
+        """Test registering second user for RBAC testing"""
+        success, data, error = self.api_request('POST', 'auth/register', self.second_user, expected_status=200)
+        result = self.log_test("RBAC: Register Second User", "POST", "/auth/register", 200, success, data, error)
+        
+        if success and data:
+            self.second_token = data.get('token')
+            self.second_user_data = data.get('user')
+            
+        return result
+
+    def test_rbac_owner_create_org(self):
+        """Test owner can create organization (becomes owner automatically)"""
+        # Use first user token (should become owner)
+        org_data = {"cui": "12345678"}  # Using test CUI
+        success, data, error = self.api_request('POST', 'organizations', org_data, expected_status=200)
+        result = self.log_test("RBAC: Owner Create Org", "POST", "/organizations", 200, success, data, error)
+        
+        if success and data:
+            self.org_id = data.get('id')
+            
+        return result
+
+    def test_rbac_owner_manage_members(self):
+        """Test owner can add members to organization"""
+        if not self.org_id or not self.second_user_data:
+            return self.log_test("RBAC: Owner Manage Members", "POST", f"/organizations/{self.org_id}/members", 200, False, None, "Missing org_id or second_user")
+        
+        member_data = {
+            "user_id": self.second_user_data['id'],
+            "rol": "imputernicit"
+        }
+        success, data, error = self.api_request('POST', f'organizations/{self.org_id}/members', member_data, expected_status=200)
+        return self.log_test("RBAC: Owner Manage Members", "POST", f"/organizations/{self.org_id}/members", 200, success, data, error)
+
+    def test_rbac_imputernicit_limited_access(self):
+        """Test imputernicit has limited access (no manage_members)"""
+        if not self.org_id or not self.second_token:
+            return self.log_test("RBAC: Imputernicit Limited Access", "POST", f"/organizations/{self.org_id}/members", 403, False, None, "Missing org_id or second_token")
+        
+        # Switch to second user token (imputernicit)
+        original_token = self.token
+        self.token = self.second_token
+        
+        # Try to add a member (should fail with 403)
+        dummy_member_data = {
+            "user_id": "dummy-user-id",
+            "rol": "consultant"
+        }
+        success, data, error = self.api_request('POST', f'organizations/{self.org_id}/members', dummy_member_data, expected_status=403)
+        result = self.log_test("RBAC: Imputernicit Limited Access", "POST", f"/organizations/{self.org_id}/members", 403, success, data, error)
+        
+        # Restore original token
+        self.token = original_token
+        return result
+
+    def test_rbac_owner_create_project(self):
+        """Test owner can create project"""
+        if not self.org_id:
+            return self.log_test("RBAC: Owner Create Project", "POST", "/projects", 200, False, None, "No org_id available")
+            
+        project_data = {
+            "titlu": "RBAC Test Project",
+            "organizatie_id": self.org_id,
+            "program_finantare": "POC 2021-2027",
+            "descriere": "Test project for RBAC validation",
+            "buget_estimat": 150000,
+            "obiective": ["RBAC Obiectiv 1", "RBAC Obiectiv 2"]
+        }
+        success, data, error = self.api_request('POST', 'projects', project_data, expected_status=200)
+        result = self.log_test("RBAC: Owner Create Project", "POST", "/projects", 200, success, data, error)
+        
+        if success and data:
+            self.project_id = data.get('id')
+            
+        return result
+
+    def test_rbac_imputernicit_view_project(self):
+        """Test imputernicit can view project"""
+        if not self.project_id or not self.second_token:
+            return self.log_test("RBAC: Imputernicit View Project", "GET", f"/projects/{self.project_id}", 200, False, None, "Missing project_id or second_token")
+        
+        # Switch to second user token (imputernicit)
+        original_token = self.token
+        self.token = self.second_token
+        
+        success, data, error = self.api_request('GET', f'projects/{self.project_id}', expected_status=200)
+        result = self.log_test("RBAC: Imputernicit View Project", "GET", f"/projects/{self.project_id}", 200, success, data, error)
+        
+        # Restore original token
+        self.token = original_token
+        return result
+
+    def test_rbac_project_transition_owner_only(self):
+        """Test project transitions only allowed for owners"""
+        if not self.project_id:
+            return self.log_test("RBAC: Project Transition Owner Only", "POST", f"/projects/{self.project_id}/transition", 200, False, None, "No project_id available")
+            
+        transition_data = {
+            "new_state": "pre_eligibil",
+            "motiv": "RBAC test transition from draft to pre_eligibil"
+        }
+        success, data, error = self.api_request('POST', f'projects/{self.project_id}/transition', transition_data, expected_status=200)
+        return self.log_test("RBAC: Project Transition Owner Only", "POST", f"/projects/{self.project_id}/transition", 200, success, data, error)
+
     # ============ ORGANIZATION TESTS ============
     
     def test_org_create(self):
