@@ -553,6 +553,231 @@ class GrantFlowAPITester:
                 
         return result
 
+    # ============ FUNDING MODULE TESTS (NEW) ============
+    
+    def test_funding_programs(self):
+        """Test get funding programs (PNRR, AFIR, POC, POR)"""
+        success, data, error = self.api_request('GET', 'funding/programs', expected_status=200)
+        result = self.log_test("Get Funding Programs", "GET", "/funding/programs", 200, success, data, error)
+        
+        # Validate response structure
+        if success and data:
+            if not isinstance(data, list) or len(data) != 4:
+                result = False
+                error = f"Expected 4 programs, got {len(data) if isinstance(data, list) else 'non-list'}"
+                self.log_test("Validate Programs Count", "GET", "/funding/programs", 200, False, None, error)
+            else:
+                # Check required programs exist
+                program_ids = [p.get('id') for p in data]
+                required_programs = ['pnrr', 'afir', 'poc', 'por']
+                missing_programs = [p for p in required_programs if p not in program_ids]
+                if missing_programs:
+                    result = False
+                    error = f"Missing programs: {missing_programs}"
+                    self.log_test("Validate Required Programs", "GET", "/funding/programs", 200, False, None, error)
+                    
+        return result
+    
+    def test_funding_sicap_search(self):
+        """Test SICAP search for laptop"""
+        success, data, error = self.api_request('GET', 'funding/sicap/search?q=laptop', expected_status=200)
+        result = self.log_test("SICAP Search - Laptop", "GET", "/funding/sicap/search?q=laptop", 200, success, data, error)
+        
+        # Validate response structure
+        if success and data:
+            if not isinstance(data, list):
+                result = False
+                error = "Expected list of CPV codes"
+                self.log_test("Validate SICAP Response", "GET", "/funding/sicap/search", 200, False, None, error)
+            elif len(data) > 0:
+                # Check first item structure
+                first_item = data[0]
+                required_fields = ['cod', 'descriere', 'pret_referinta_min', 'pret_referinta_max']
+                missing_fields = [f for f in required_fields if f not in first_item]
+                if missing_fields:
+                    result = False
+                    error = f"SICAP item missing fields: {missing_fields}"
+                    self.log_test("Validate SICAP Item Structure", "GET", "/funding/sicap/search", 200, False, None, error)
+                    
+        return result
+    
+    def test_funding_afir_search(self):
+        """Test AFIR prices search for tractor"""
+        success, data, error = self.api_request('GET', 'funding/afir/preturi?q=tractor', expected_status=200)
+        result = self.log_test("AFIR Prices - Tractor", "GET", "/funding/afir/preturi?q=tractor", 200, success, data, error)
+        
+        # Validate response structure
+        if success and data:
+            if not isinstance(data, list):
+                result = False
+                error = "Expected list of AFIR prices"
+                self.log_test("Validate AFIR Response", "GET", "/funding/afir/preturi", 200, False, None, error)
+            elif len(data) > 0:
+                # Check first item structure
+                first_item = data[0]
+                required_fields = ['categorie', 'subcategorie', 'pret_min', 'pret_max', 'unitate']
+                missing_fields = [f for f in required_fields if f not in first_item]
+                if missing_fields:
+                    result = False
+                    error = f"AFIR item missing fields: {missing_fields}"
+                    self.log_test("Validate AFIR Item Structure", "GET", "/funding/afir/preturi", 200, False, None, error)
+                    
+        return result
+    
+    def test_funding_templates(self):
+        """Test get draft templates (should return 8 templates)"""
+        success, data, error = self.api_request('GET', 'funding/templates', expected_status=200)
+        result = self.log_test("Get Draft Templates", "GET", "/funding/templates", 200, success, data, error)
+        
+        # Validate response structure
+        if success and data:
+            if not isinstance(data, list) or len(data) != 8:
+                result = False
+                error = f"Expected 8 templates, got {len(data) if isinstance(data, list) else 'non-list'}"
+                self.log_test("Validate Templates Count", "GET", "/funding/templates", 200, False, None, error)
+            else:
+                # Check first template structure
+                first_template = data[0]
+                required_fields = ['id', 'label', 'categorie', 'sectiuni']
+                missing_fields = [f for f in required_fields if f not in first_template]
+                if missing_fields:
+                    result = False
+                    error = f"Template missing fields: {missing_fields}"
+                    self.log_test("Validate Template Structure", "GET", "/funding/templates", 200, False, None, error)
+                    
+        return result
+    
+    def test_funding_project_types(self):
+        """Test get project types (should return 5 types)"""
+        success, data, error = self.api_request('GET', 'funding/project-types', expected_status=200)
+        result = self.log_test("Get Project Types", "GET", "/funding/project-types", 200, success, data, error)
+        
+        # Validate response structure
+        if success and data:
+            if not isinstance(data, list) or len(data) != 5:
+                result = False
+                error = f"Expected 5 project types, got {len(data) if isinstance(data, list) else 'non-list'}"
+                self.log_test("Validate Project Types Count", "GET", "/funding/project-types", 200, False, None, error)
+            else:
+                # Check required types
+                type_ids = [t.get('id') for t in data]
+                required_types = ['bunuri', 'bunuri_montaj', 'constructii', 'servicii', 'mixt']
+                missing_types = [t for t in required_types if t not in type_ids]
+                if missing_types:
+                    result = False
+                    error = f"Missing project types: {missing_types}"
+                    self.log_test("Validate Required Project Types", "GET", "/funding/project-types", 200, False, None, error)
+                    
+        return result
+    
+    def test_funding_project_config(self):
+        """Test save project configuration"""
+        if not self.project_id:
+            return self.log_test("Save Project Config", "POST", "/funding/project-config", 200, False, None, "No project_id available")
+        
+        config_data = {
+            "project_id": self.project_id,
+            "tip_proiect": "bunuri",
+            "locatie_implementare": "Strada Test, nr. 123, București",
+            "judet_implementare": "București",
+            "tema_proiect": "Modernizarea infrastructurii IT prin achiziția de echipamente performante"
+        }
+        success, data, error = self.api_request('POST', 'funding/project-config', config_data, expected_status=200)
+        result = self.log_test("Save Project Config", "POST", "/funding/project-config", 200, success, data, error)
+        
+        # Validate updated project data
+        if success and data:
+            has_config_fields = all(field in data for field in ['tip_proiect', 'locatie_implementare', 'judet_implementare', 'tema_proiect'])
+            if not has_config_fields:
+                result = False
+                error = "Project config fields not saved properly"
+                self.log_test("Validate Project Config Save", "POST", "/funding/project-config", 200, False, None, error)
+                
+        return result
+    
+    def test_funding_legislation_upload(self):
+        """Test upload legislation file"""
+        if not self.project_id:
+            return self.log_test("Upload Legislation", "POST", "/funding/legislation/upload", 200, False, None, "No project_id available")
+        
+        # Create a test legislation file
+        test_content = b"Ghidul Solicitantului - Test Content\nProcedura de evaluare si selectie\nCriterii de eligibilitate"
+        files = {'file': ('ghid_test.txt', test_content, 'text/plain')}
+        data = {
+            'project_id': self.project_id,
+            'titlu': 'Ghidul Solicitantului - Test',
+            'tip': 'ghid'
+        }
+        
+        success, response_data, error = self.api_request('POST', 'funding/legislation/upload', data=data, files=files, expected_status=200)
+        result = self.log_test("Upload Legislation", "POST", "/funding/legislation/upload", 200, success, response_data, error)
+        
+        if success and response_data:
+            self.legislation_id = response_data.get('id')
+            # Validate response structure
+            required_fields = ['id', 'project_id', 'titlu', 'tip', 'filename', 'file_size']
+            missing_fields = [f for f in required_fields if f not in response_data]
+            if missing_fields:
+                result = False
+                error = f"Legislation upload response missing fields: {missing_fields}"
+                self.log_test("Validate Legislation Upload Response", "POST", "/funding/legislation/upload", 200, False, None, error)
+                
+        return result
+    
+    def test_funding_generate_draft(self):
+        """Test AI draft generation"""
+        if not self.project_id:
+            return self.log_test("Generate Draft", "POST", "/funding/generate-draft", 200, False, None, "No project_id available")
+        
+        # Use first template (plan_afaceri) for testing
+        draft_data = {
+            "project_id": self.project_id,
+            "template_id": "plan_afaceri",
+            "sectiune": "Rezumat executiv"
+        }
+        success, data, error = self.api_request('POST', 'funding/generate-draft', draft_data, expected_status=200)
+        result = self.log_test("Generate Draft", "POST", "/funding/generate-draft", 200, success, data, error)
+        
+        if success and data:
+            self.draft_id = data.get('id')
+            # Validate response structure
+            required_fields = ['id', 'project_id', 'template_id', 'template_label', 'continut', 'status', 'versiune']
+            missing_fields = [f for f in required_fields if f not in data]
+            if missing_fields:
+                result = False
+                error = f"Draft generation response missing fields: {missing_fields}"
+                self.log_test("Validate Draft Generation Response", "POST", "/funding/generate-draft", 200, False, None, error)
+            elif not data.get('continut'):
+                result = False
+                error = "Generated draft has no content"
+                self.log_test("Validate Draft Content", "POST", "/funding/generate-draft", 200, False, None, error)
+                
+        return result
+    
+    def test_funding_evaluate_conformity(self):
+        """Test conformity evaluation agent"""
+        if not self.project_id:
+            return self.log_test("Evaluate Conformity", "POST", "/funding/evaluate-conformity", 200, False, None, "No project_id available")
+        
+        eval_data = {"project_id": self.project_id}
+        success, data, error = self.api_request('POST', 'funding/evaluate-conformity', eval_data, expected_status=200)
+        result = self.log_test("Evaluate Conformity", "POST", "/funding/evaluate-conformity", 200, success, data, error)
+        
+        if success and data:
+            # Validate response structure
+            required_fields = ['id', 'project_id', 'type', 'result', 'success']
+            missing_fields = [f for f in required_fields if f not in data]
+            if missing_fields:
+                result = False
+                error = f"Conformity evaluation response missing fields: {missing_fields}"
+                self.log_test("Validate Conformity Response", "POST", "/funding/evaluate-conformity", 200, False, None, error)
+            elif not data.get('result'):
+                result = False
+                error = "Conformity evaluation has no result"
+                self.log_test("Validate Conformity Result", "POST", "/funding/evaluate-conformity", 200, False, None, error)
+                
+        return result
+
     # ============ ADMIN TESTS ============
     
     def test_admin_dashboard(self):
