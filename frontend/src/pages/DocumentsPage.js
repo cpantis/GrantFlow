@@ -79,6 +79,40 @@ export function DocumentsPage() {
     setUploading(false);
   };
 
+  const triggerOcr = async (docId) => {
+    setOcrLoading(true);
+    try {
+      const res = await api.post(`/documents/${docId}/ocr`);
+      setOcrData(res.data);
+      setSelectedDoc(docId);
+      setOcrOpen(true);
+      load();
+    } catch (e) { console.error(e); }
+    setOcrLoading(false);
+  };
+
+  const viewOcr = async (docId) => {
+    try {
+      const res = await api.get(`/documents/${docId}/ocr`);
+      setOcrData(res.data);
+      setSelectedDoc(docId);
+      setOcrOpen(true);
+    } catch (e) { console.error(e); }
+  };
+
+  const submitCorrection = async () => {
+    if (!correcting || !correctedValue.trim()) return;
+    try {
+      const res = await api.post(`/documents/${selectedDoc}/ocr/correct?field_name=${correcting}&corrected_value=${encodeURIComponent(correctedValue)}`);
+      if (res.data.success) {
+        setOcrData(res.data.ocr_data);
+        setCorrecting(null);
+        setCorrectedValue('');
+        load();
+      }
+    } catch (e) { console.error(e); }
+  };
+
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Se încarcă...</div>;
 
   return (
