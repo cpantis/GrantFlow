@@ -153,7 +153,7 @@ export function DashboardPage() {
         </div>
 
         <div className="space-y-4">
-          <h2 className="font-heading text-xl font-bold">Organizații</h2>
+          <h2 className="font-heading text-xl font-bold">Firme</h2>
           {orgs.length === 0 ? (
             <Card className="bg-card border-border"><CardContent className="p-6 text-center text-muted-foreground">
               <Link to="/organizations" className="text-primary hover:underline">Adaugă prima organizație</Link>
