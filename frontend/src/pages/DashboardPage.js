@@ -69,7 +69,9 @@ export function DashboardPage() {
       )}
       <div>
         <h1 className="font-heading text-3xl font-bold tracking-tight">Bun venit, {user?.prenume}</h1>
-        <p className="text-muted-foreground mt-1">Panou de control GrantFlow</p>
+        <p className="text-muted-foreground mt-1">
+          {activeFirm ? <><span className="text-primary font-medium">{activeFirm.denumire}</span> &middot; Panou de control</> : 'Panou de control GrantFlow'}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
