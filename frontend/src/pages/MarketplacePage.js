@@ -101,7 +101,7 @@ export function MarketplacePage() {
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-2">{s.descriere}</p>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1"><Briefcase className="w-3 h-3" />{s.experienta_ani} ani</span>
                   {s.tarif_orar && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{s.tarif_orar} RON/oră</span>}
                   <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3" />{s.proiecte_finalizate} proiecte</span>
