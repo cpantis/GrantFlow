@@ -206,8 +206,8 @@ export function DocumentsPage() {
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                   <FileText className="w-8 h-8 text-muted-foreground flex-shrink-0" />
                   <div className="min-w-0">
-                    <p className="font-medium text-sm truncate">{d.filename}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                    <p className="font-semibold text-[15px] truncate">{d.filename}</p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                       <span>{TYPE_LABELS[d.tip] || d.tip}</span>
                       {d.faza && <span>&middot; {d.faza}</span>}
                       <span>&middot; v{d.versiune}</span>
