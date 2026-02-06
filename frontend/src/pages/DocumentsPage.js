@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Upload, Filter, Eye, Clock, FileUp } from 'lucide-react';
+import { FileText, Upload, Filter, Eye, Clock, FileUp, Scan, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const TYPE_LABELS = {
   cerere_finantare: 'Cerere finanțare', memoriu: 'Memoriu', declaratie: 'Declarație',
