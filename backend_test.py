@@ -505,6 +505,54 @@ class GrantFlowAPITester:
         success, data, error = self.api_request('POST', f'compliance/submission-ready/{self.project_id}', expected_status=200)
         return self.log_test("Check Submission Ready", "POST", f"/compliance/submission-ready/{self.project_id}", 200, success, data, error)
 
+    def test_ai_navigator_with_project(self):
+        """Test AI Navigator chat with project context"""
+        if not self.project_id:
+            return self.log_test("AI Navigator with Project", "POST", "/compliance/navigator", 200, False, None, "No project_id available")
+            
+        chat_data = {
+            "message": "Care sunt următorii pași pentru acest proiect?",
+            "project_id": self.project_id
+        }
+        success, data, error = self.api_request('POST', 'compliance/navigator', chat_data, expected_status=200)
+        result = self.log_test("AI Navigator with Project", "POST", "/compliance/navigator", 200, success, data, error)
+        
+        # Validate AI response structure and markdown
+        if success and data:
+            has_response = 'response' in data and data['response']
+            has_success = 'success' in data
+            if not has_response or not has_success:
+                result = False
+                error = f"AI Navigator response missing fields. Got: {data}"
+                self.log_test("AI Navigator Response Validation", "POST", "/compliance/navigator", 200, False, None, error)
+            else:
+                # Check if response contains markdown elements (basic check)
+                response_text = data['response']
+                has_markdown = any(marker in response_text for marker in ['##', '**', '-', '>', '`'])
+                if not has_markdown:
+                    print(f"   ⚠️  WARNING: AI response may not contain markdown formatting. Response: {response_text[:200]}...")
+                
+        return result
+
+    def test_ai_navigator_without_project(self):
+        """Test AI Navigator chat without project context"""
+        chat_data = {
+            "message": "Ce informații generale poți să îmi oferi despre eligibilitatea pentru proiecte de finanțare?"
+        }
+        success, data, error = self.api_request('POST', 'compliance/navigator', chat_data, expected_status=200)
+        result = self.log_test("AI Navigator General", "POST", "/compliance/navigator", 200, success, data, error)
+        
+        # Validate response structure
+        if success and data:
+            has_response = 'response' in data and data['response']
+            has_success = 'success' in data
+            if not has_response or not has_success:
+                result = False
+                error = f"AI Navigator response missing fields. Got: {data}"
+                self.log_test("AI Navigator General Response Validation", "POST", "/compliance/navigator", 200, False, None, error)
+                
+        return result
+
     # ============ ADMIN TESTS ============
     
     def test_admin_dashboard(self):
