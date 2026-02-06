@@ -441,6 +441,58 @@ class GrantFlowAPITester:
         success, data, error = self.api_request('GET', 'documents', expected_status=200)
         return self.log_test("List Documents", "GET", "/documents", 200, success, data, error)
 
+    # ============ OCR TESTS ============
+    
+    def test_ocr_trigger(self):
+        """Test trigger OCR processing for document"""
+        if not self.doc_id:
+            return self.log_test("OCR: Trigger Processing", "POST", f"/documents/{self.doc_id}/ocr", 200, False, None, "No doc_id available")
+        
+        success, data, error = self.api_request('POST', f'documents/{self.doc_id}/ocr', expected_status=200)
+        return self.log_test("OCR: Trigger Processing", "POST", f"/documents/{self.doc_id}/ocr", 200, success, data, error)
+
+    def test_ocr_get_results(self):
+        """Test get OCR results with extracted fields and confidence scores"""
+        if not self.doc_id:
+            return self.log_test("OCR: Get Results", "GET", f"/documents/{self.doc_id}/ocr", 200, False, None, "No doc_id available")
+        
+        success, data, error = self.api_request('GET', f'documents/{self.doc_id}/ocr', expected_status=200)
+        result = self.log_test("OCR: Get Results", "GET", f"/documents/{self.doc_id}/ocr", 200, success, data, error)
+        
+        # Validate OCR response structure
+        if success and data:
+            required_fields = ['extracted_fields', 'field_confidences', 'overall_confidence', 'status']
+            missing_fields = [field for field in required_fields if field not in data]
+            if missing_fields:
+                result = False
+                error = f"OCR response missing fields: {missing_fields}"
+                self.log_test("OCR: Response Validation", "GET", f"/documents/{self.doc_id}/ocr", 200, False, None, error)
+                
+        return result
+
+    def test_ocr_correct_field(self):
+        """Test OCR field correction"""
+        if not self.doc_id:
+            return self.log_test("OCR: Correct Field", "POST", f"/documents/{self.doc_id}/ocr/correct", 200, False, None, "No doc_id available")
+        
+        # First get the OCR results to find a field to correct
+        success, ocr_data, error = self.api_request('GET', f'documents/{self.doc_id}/ocr', expected_status=200)
+        if not success or not ocr_data or not ocr_data.get('extracted_fields'):
+            return self.log_test("OCR: Correct Field", "POST", f"/documents/{self.doc_id}/ocr/correct", 200, False, None, "No OCR data available for correction")
+        
+        # Pick the first field to correct
+        first_field = list(ocr_data['extracted_fields'].keys())[0]
+        corrected_value = "Corrected Test Value"
+        
+        correct_data = {
+            "field_name": first_field,
+            "corrected_value": corrected_value
+        }
+        
+        # Use query parameters as per the API
+        success, data, error = self.api_request('POST', f'documents/{self.doc_id}/ocr/correct?field_name={first_field}&corrected_value={corrected_value}', expected_status=200)
+        return self.log_test("OCR: Correct Field", "POST", f"/documents/{self.doc_id}/ocr/correct", 200, success, data, error)
+
     # ============ COMPLIANCE TESTS ============
     
     def test_compliance_submission_ready(self):
