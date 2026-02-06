@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 const navItems = [
   { path: '/dashboard', label: 'Panou', icon: LayoutDashboard },
-  { path: '/organizations', label: 'Organizații', icon: Building2 },
+  { path: '/organizations', label: 'Firme', icon: Building2 },
   { path: '/projects', label: 'Proiecte', icon: FolderKanban },
   { path: '/documents', label: 'Documente', icon: FileText },
   { path: '/compliance', label: 'Conformitate', icon: Shield },
