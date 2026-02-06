@@ -793,8 +793,8 @@ class GrantFlowAPITester:
     def run_all_tests(self):
         """Run all backend API tests"""
         print("="*60)
-        print("🚀 STARTING GRANTFLOW BACKEND API TESTING - ITERATION 2")
-        print("   Testing RBAC, Email Verification, Password Reset, OCR")
+        print("🚀 STARTING GRANTFLOW BACKEND API TESTING - ITERATION 7")
+        print("   Testing EU Funding Module (Programs, SICAP, AFIR, Templates, AI)")
         print("="*60)
         print(f"Base URL: {self.base_url}")
         print(f"Test Email: {self.test_email}")
@@ -880,6 +880,21 @@ class GrantFlowAPITester:
         self.test_ocr_trigger()
         self.test_ocr_get_results()
         self.test_ocr_correct_field()
+        
+        # NEW: Funding Module tests
+        print("\n" + "="*40)
+        print("💰 EU FUNDING MODULE TESTS")
+        print("="*40)
+        
+        self.test_funding_programs()
+        self.test_funding_sicap_search()
+        self.test_funding_afir_search()
+        self.test_funding_templates()
+        self.test_funding_project_types()
+        self.test_funding_project_config()
+        self.test_funding_legislation_upload()
+        self.test_funding_generate_draft()
+        self.test_funding_evaluate_conformity()
         
         # Compliance tests
         print("\n" + "="*40)
