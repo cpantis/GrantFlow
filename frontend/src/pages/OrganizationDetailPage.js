@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building2, Users, FileText, TrendingUp, RefreshCw, ArrowLeft, Shield, Calendar, MapPin, Hash, Briefcase } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Building2, Users, FileText, TrendingUp, RefreshCw, ArrowLeft, Shield, Calendar, MapPin, Hash, Briefcase, Trash2 } from 'lucide-react';
 
 export function OrganizationDetailPage() {
   const { id } = useParams();
