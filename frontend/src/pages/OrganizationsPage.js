@@ -76,10 +76,10 @@ export function OrganizationsPage() {
 
       {orgs.length === 0 ? (
         <Card className="bg-card border-border">
-          <CardContent className="p-12 text-center">
-            <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">Nicio firmă</h3>
-            <p className="text-muted-foreground mb-4">Adaugă prima firmă prin introducerea CUI-ului</p>
+          <CardContent className="p-14 text-center">
+            <Building2 className="w-14 h-14 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Nicio firmă</h3>
+            <p className="text-base text-muted-foreground mb-4">Adaugă prima firmă prin introducerea CUI-ului</p>
           </CardContent>
         </Card>
       ) : (
