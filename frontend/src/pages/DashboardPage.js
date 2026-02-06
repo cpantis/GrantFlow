@@ -156,7 +156,7 @@ export function DashboardPage() {
           <h2 className="font-heading text-xl font-bold">Firme</h2>
           {orgs.length === 0 ? (
             <Card className="bg-card border-border"><CardContent className="p-6 text-center text-muted-foreground">
-              <Link to="/organizations" className="text-primary hover:underline">Adaugă prima organizație</Link>
+              <Link to="/organizations" className="text-primary hover:underline">Adaugă prima firmă</Link>
             </CardContent></Card>
           ) : (
             <div className="space-y-3">
