@@ -5,6 +5,7 @@ import uuid
 from datetime import datetime, timezone
 from middleware.auth_middleware import get_current_user
 from services.ai_service import check_eligibility, validate_coherence, chat_navigator
+from services.orchestrator_service import run_orchestrator_check
 
 router = APIRouter(prefix="/api/compliance", tags=["compliance"])
 db = None
