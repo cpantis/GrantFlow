@@ -176,9 +176,9 @@ export function DocumentsPage() {
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2 text-sm text-muted-foreground"><Filter className="w-4 h-4" />Filtre:</div>
         <Select value={filter.organizatie_id} onValueChange={(v) => setFilter({ ...filter, organizatie_id: v === 'all' ? '' : v })}>
-          <SelectTrigger className="w-48" data-testid="filter-org"><SelectValue placeholder="Toate organizațiile" /></SelectTrigger>
+          <SelectTrigger className="w-48" data-testid="filter-org"><SelectValue placeholder="Toate firmele" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Toate organizațiile</SelectItem>
+            <SelectItem value="all">Toate firmele</SelectItem>
             {orgs.map((o) => <SelectItem key={o.id} value={o.id}>{o.denumire}</SelectItem>)}
           </SelectContent>
         </Select>
