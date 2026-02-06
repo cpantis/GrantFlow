@@ -81,17 +81,21 @@ export function CompliancePage() {
               <Badge className="bg-purple-500/15 text-purple-400 border-purple-500/20 rounded-full text-xs">GPT-5.2</Badge>
             </CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div className="max-h-96 overflow-y-auto space-y-3 min-h-[150px]" data-testid="compliance-chat-history">
+              <div className="max-h-[500px] overflow-y-auto space-y-4 min-h-[150px] scroll-smooth" data-testid="compliance-chat-history">
                 {chatHistory.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-8">Întreabă despre eligibilitate, programe de finanțare, cerințe sau pașii de urmat.</p>
                 )}
                 {chatHistory.map((m, i) => (
                   <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] rounded-lg px-3 py-2 ${
-                      m.role === 'user' ? 'bg-primary text-primary-foreground text-sm' : 'bg-muted'
-                    }`}>
-                      {m.role === 'user' ? m.text : <AiMessage text={m.text} />}
-                    </div>
+                    {m.role === 'user' ? (
+                      <div className="max-w-[75%] rounded-lg px-4 py-2.5 bg-primary text-primary-foreground text-sm">
+                        {m.text}
+                      </div>
+                    ) : (
+                      <div className="max-w-[90%] rounded-lg px-4 py-3 bg-secondary/50 border border-border">
+                        <AiMessage text={m.text} />
+                      </div>
+                    )}
                   </div>
                 ))}
                 {chatLoading && <div className="flex justify-start"><div className="bg-muted rounded-lg px-3 py-2 text-sm animate-pulse">Se generează...</div></div>}
