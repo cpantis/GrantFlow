@@ -72,11 +72,22 @@ export function ProjectDetailPage() {
         setProject(pRes.data);
         setStates(sRes.data.transitions || {});
         setReports(rRes.data || []);
+        setTemplates(tRes.data || []);
+        setDrafts(dRes.data || []);
       } catch (e) { console.error(e); }
       setLoading(false);
     };
     load();
   }, [id]);
+
+  const generateDraft = async (templateId) => {
+    setGenerating(templateId);
+    try {
+      const res = await api.post('/funding/generate-draft', { project_id: id, template_id: templateId });
+      setDrafts(prev => [...prev, res.data]);
+    } catch (e) { console.error(e); }
+    setGenerating(null);
+  };
 
   const handleTransition = async (newState) => {
     setTransitionLoading(true);
