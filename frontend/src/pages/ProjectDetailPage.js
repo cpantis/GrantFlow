@@ -55,14 +55,19 @@ export function ProjectDetailPage() {
   const [eligibilityLoading, setEligibilityLoading] = useState(false);
   const [reports, setReports] = useState([]);
   const [submissionReady, setSubmissionReady] = useState(null);
+  const [templates, setTemplates] = useState([]);
+  const [drafts, setDrafts] = useState([]);
+  const [generating, setGenerating] = useState(null);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [pRes, sRes, rRes] = await Promise.all([
+        const [pRes, sRes, rRes, tRes, dRes] = await Promise.all([
           api.get(`/projects/${id}`),
           api.get('/projects/states'),
-          api.get(`/compliance/reports/${id}`).catch(() => ({ data: [] }))
+          api.get(`/compliance/reports/${id}`).catch(() => ({ data: [] })),
+          api.get('/funding/templates').catch(() => ({ data: [] })),
+          api.get(`/funding/drafts/${id}`).catch(() => ({ data: [] })),
         ]);
         setProject(pRes.data);
         setStates(sRes.data.transitions || {});
