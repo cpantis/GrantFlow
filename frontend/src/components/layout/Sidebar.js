@@ -74,13 +74,13 @@ export function Sidebar({ collapsed, onToggle }) {
 
         <div className="p-3 border-t border-border">
           {!collapsed && user && (
-            <div className="mb-2 px-2 text-xs text-muted-foreground truncate">
+            <div className="mb-2 px-2 text-sm text-muted-foreground truncate">
               {user.prenume} {user.nume}
             </div>
           )}
           <Button
             variant="ghost"
-            className={`w-full text-destructive hover:text-destructive hover:bg-destructive/10 ${collapsed ? 'px-0 justify-center' : 'justify-start'}`}
+            className={`w-full text-destructive hover:text-destructive hover:bg-destructive/10 text-[15px] ${collapsed ? 'px-0 justify-center' : 'justify-start'}`}
             onClick={handleLogout}
             data-testid="logout-btn"
           >
