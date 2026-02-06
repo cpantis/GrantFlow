@@ -45,8 +45,25 @@ export function DashboardPage() {
 
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Se încarcă...</div>;
 
+  const resendVerification = async () => {
+    try {
+      await api.post('/auth/resend-verification');
+    } catch (e) { console.error(e); }
+  };
+
   return (
     <div data-testid="dashboard-page" className="space-y-8">
+      {user && !user.email_verified && (
+        <div className="p-4 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center justify-between" data-testid="verify-email-banner">
+          <div className="flex items-center gap-3">
+            <Mail className="w-5 h-5 text-amber-400" />
+            <span className="text-sm">Verificați adresa de email pentru a activa complet contul.</span>
+          </div>
+          <Button variant="outline" size="sm" onClick={resendVerification} data-testid="resend-verification-btn">
+            Retrimite email
+          </Button>
+        </div>
+      )}
       <div>
         <h1 className="font-heading text-3xl font-bold tracking-tight">Bun venit, {user?.prenume}</h1>
         <p className="text-muted-foreground mt-1">Panou de control GrantFlow</p>
