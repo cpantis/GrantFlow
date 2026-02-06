@@ -76,7 +76,9 @@ export function ProjectsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-3xl font-bold tracking-tight">Proiecte</h1>
-          <p className="text-muted-foreground mt-1">Gestionează dosarele de finanțare</p>
+          <p className="text-muted-foreground mt-1">
+            {activeFirm ? <><span className="text-primary font-medium">{activeFirm.denumire}</span> &middot; CUI: {activeFirm.cui}</> : 'Selectează o firmă din meniul lateral'}
+          </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
