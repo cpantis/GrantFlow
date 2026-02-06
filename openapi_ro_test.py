@@ -152,7 +152,9 @@ class OpenAPIRoTester:
         result = self.log_test("Create Org with REAL CUI 33034700 (Termene Just SRL)", "POST", "/organizations", 200, success, data, error)
         
         if success and data:
-            self.created_org_ids.append(data.get('id'))
+            org_id = data.get('id')
+            if org_id:
+                self.created_org_ids.append(org_id)
             
             # Verify presence of real address and phone data
             address = data.get('adresa', '')
