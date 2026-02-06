@@ -113,6 +113,7 @@ class GrantFlowAPITester:
         if success and data:
             self.token = data.get('token')
             self.user_data = data.get('user')
+            self.verification_token = data.get('verification_token')  # For email verification testing
             
         return result
 
