@@ -81,12 +81,12 @@ export function AdminPage() {
           ) : (
             auditLog.map((a) => (
               <Card key={a.id} className="bg-card border-border" data-testid={`audit-${a.id}`}>
-                <CardContent className="p-3 flex items-center justify-between">
+                <CardContent className="p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Activity className="w-4 h-4 text-primary" />
                     <div>
-                      <p className="text-sm font-medium">{a.action}</p>
-                      <p className="text-xs text-muted-foreground">{a.entity_type} &middot; {JSON.stringify(a.details || {}).slice(0, 80)}</p>
+                      <p className="text-[15px] font-medium">{a.action}</p>
+                      <p className="text-sm text-muted-foreground">{a.entity_type} &middot; {JSON.stringify(a.details || {}).slice(0, 80)}</p>
                     </div>
                   </div>
                   <span className="text-xs text-muted-foreground whitespace-nowrap">{new Date(a.timestamp).toLocaleString('ro-RO')}</span>
