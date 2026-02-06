@@ -15,11 +15,13 @@ export function CompliancePage() {
   const [chatMsg, setChatMsg] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [chatLoading, setChatLoading] = useState(false);
+  const { activeFirm } = useFirm();
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await api.get('/projects');
+        const params = activeFirm ? `?organizatie_id=${activeFirm.id}` : '';
+        const res = await api.get(`/projects${params}`);
         setProjects(res.data || []);
       } catch (e) { console.error(e); }
       setLoading(false);
