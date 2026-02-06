@@ -7,89 +7,77 @@ GrantFlow - Platformă enterprise end-to-end care automatizează depunerea dosar
 - **Frontend**: React 19 + Tailwind CSS + shadcn/ui + React Router
 - **Backend**: FastAPI (Python) + MongoDB (Motor async driver)
 - **AI**: OpenAI GPT-5.2 via Emergent LLM Key (emergentintegrations)
-- **Auth**: JWT-based (email + password)
-- **External APIs**: MOCKED (ONRC, ANAF, AFIR, SICAP)
-
-## User Personas
-1. **Owner firmă** - Administrator legal, acces complet la workspace firmă
-2. **Împuternicit** - Delegat de owner, scope limitat conform împuternicire
-3. **Consultant/Specialist** - Expert extern, task-uri atribuite pe proiect
-4. **Admin platformă** - Gestiune utilizatori, audit, sistem
-
-## Core Requirements
-- Autentificare JWT (register, login, profil)
-- Management organizații (CUI lookup ONRC, certificat constatator, date ANAF)
-- RBAC (Owner, Împuternicit, Consultant)
-- Management documente (upload, versionare, taxonomie, OCR pipeline)
-- Motor proiecte cu State Machine (12 stări, tranziții deterministe)
-- AI Agents (Eligibilitate, Redactor, Validator, Evaluator, Navigator)
-- Conformitate & Eligibilitate (scoring, checklist depunere)
-- Marketplace specialiști
-- Implementare & Monitorizare (milestones, buget vs cheltuieli)
-- Admin & Audit log
+- **Auth**: JWT-based (email + password) + Email verification + Password reset
+- **External APIs**: MOCKED (ONRC, ANAF, AFIR, SICAP, OCR)
 
 ## What's Been Implemented (Jan 2026)
 
-### Backend (FastAPI)
-- Auth API (register, login, profile, JWT)
-- Organizations API (CRUD, CUI lookup, ONRC mock, ANAF mock, financial data)
-- Projects API (CRUD, state machine, transitions, milestones, expenses)
-- Documents API (upload, versioning, taxonomy, filters)
-- Compliance API (eligibility check via GPT-5.2, validation, navigator chat, submission readiness)
-- Marketplace API (specialist profiles, listing, assignment)
-- Admin API (dashboard, audit log, user management)
+### Iteration 1 - Core Platform (All 5 Phases)
+- Auth (register, login, JWT)
+- Organizations (CUI lookup, ONRC mock, ANAF mock, financial data)
+- Projects (state machine 12 states, transitions, milestones, expenses)
+- Documents (upload, versioning, taxonomy)
+- AI Agents (GPT-5.2: eligibility, validation, navigator chat)
+- Marketplace (specialist profiles)
+- Admin (dashboard, audit log, users)
+- Compliance (submission readiness checks)
 
-### Frontend (React)
-- Login & Registration pages (dark theme, Chivo + IBM Plex Sans)
-- Dashboard (KPIs, recent projects, organizations)
-- Organizations (list, add by CUI, detail with tabs: general, members, financial, CAEN)
-- Projects (list, create, detail with state machine visualization, compliance, budget, history, AI Navigator chat)
-- Documents (library with upload, filters by org/type/phase, taxonomy badges)
-- Compliance (project status overview, AI Navigator chat)
-- Marketplace (specialist profiles, create profile)
-- Admin (stats, audit log, users, project states)
-- Collapsible sidebar navigation
-- Protected routes with JWT auth
-
-### AI Integration
-- GPT-5.2 via Emergent LLM Key for:
-  - Eligibility checking
-  - Document coherence validation
-  - Navigator chatbot (context-aware)
+### Iteration 2 - RBAC + Email + OCR
+- **RBAC complet**: Owner/Împuternicit/Consultant permission model
+  - Owner: full access (manage members, authorizations, projects, export, audit)
+  - Împuternicit: limited by authorization scope (read org, write projects, upload docs)
+  - Consultant: project-specific only (read, upload docs, compliance)
+  - Authorization expiry enforcement
+  - Context-aware permissions (org vs project vs document)
+- **Email Verification + Password Reset**:
+  - Registration returns verification_token
+  - POST /verify-email with token
+  - Resend verification endpoint
+  - Password reset request (rate-limited, 3 per hour)
+  - Password reset confirm with token (1h expiry)
+  - Change password with current password
+  - Dashboard email verification banner
+  - Frontend /reset-password page (request → confirm → done)
+  - Frontend /verify-email page
+- **OCR Pipeline**:
+  - MOCK OCR engine with realistic field extraction
+  - Per-document-type templates (CI, bilanț, factură, contract, împuternicire)
+  - Per-field confidence scores
+  - OCR status: completed / needs_review / low_confidence
+  - Human-in-the-loop field correction
+  - OCR trigger, view, correct API endpoints
+  - Frontend OCR button on each document
+  - OCR results modal with confidence visualization
+  - Inline field correction for low-confidence fields
+  - Audit logging for OCR corrections
 
 ## Testing Results
-- Backend: 100% (16/16 tests passed)
-- Frontend: 95% (19/20 tests passed)
-- All MOCKED APIs working correctly
+- Iteration 1: Backend 100% (16/16), Frontend 95%
+- Iteration 2: Backend 100% (30/30), Frontend 85%
 
-## Backlog (P0-P2)
+## Backlog
 
 ### P0 - Critical
-- Real ONRC/ANAF API integration (when available)
-- Email verification on registration
-- Password reset flow
+- Real ONRC/ANAF API integration
 - ZIP package generation for submission
+- Real email sending (SendGrid/Resend)
 
 ### P1 - Important
-- OCR pipeline integration (document parsing)
-- Full RBAC enforcement (owner/imputernicit/consultant permissions)
-- Document signing workflow
-- Milestones management UI
-- Expenses tracking UI
+- Real OCR integration (Tesseract/cloud OCR)
+- Milestones/expenses management UI forms
 - Reimbursement requests
-
-### P2 - Nice to have
-- Specialist verification workflow
-- KPI dashboard with charts
+- Document signing workflow
 - Notification system
-- Multi-language support
-- Export reports (PDF)
-- GDPR compliance tools
+
+### P2
+- KPI dashboard with charts
 - Portal export profiles (MySMIS, AFIR, PNRR)
+- Multi-language support
+- GDPR compliance tools
+- Specialist verification workflow
 
 ## Next Tasks
-1. Implement ZIP package generation (Conform → download)
-2. Add milestone/expense management forms in project detail
-3. Implement full RBAC middleware enforcement
-4. Add email verification flow
-5. OCR document processing pipeline
+1. ZIP package generation for Conform state
+2. Milestones/expenses management forms
+3. Real email integration
+4. Notification system
