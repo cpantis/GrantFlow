@@ -125,8 +125,8 @@ export function DashboardPage() {
             </Link>
           </div>
           {projects.length === 0 ? (
-            <Card className="bg-card border-border"><CardContent className="p-8 text-center text-muted-foreground">
-              Niciun proiect încă. <Link to="/projects" className="text-primary hover:underline">Creează primul proiect</Link>
+            <Card className="bg-card border-border"><CardContent className="p-10 text-center text-muted-foreground">
+              Niciun proiect încă. <Link to="/projects" className="text-primary hover:underline font-medium">Creează primul proiect</Link>
             </CardContent></Card>
           ) : (
             <div className="space-y-3">
