@@ -15,6 +15,8 @@ class GrantFlowAPITester:
         self.org_id = None
         self.project_id = None
         self.doc_id = None
+        self.legislation_id = None
+        self.draft_id = None
         
         # Test user data
         self.test_email = f"test_{uuid.uuid4().hex[:8]}@example.com"
