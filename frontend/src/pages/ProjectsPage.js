@@ -135,12 +135,12 @@ export function ProjectsPage() {
                 <CardContent className="p-5 flex items-center justify-between">
                   <div className="space-y-1 flex-1">
                     <div className="flex items-center gap-3">
-                      <p className="font-medium">{p.titlu}</p>
-                      <Badge className={`rounded-full px-2.5 py-0.5 text-xs font-medium border ${STATE_COLORS[p.stare] || STATE_COLORS.draft}`}>
+                      <p className="font-semibold text-[15px]">{p.titlu}</p>
+                      <Badge className={`rounded-full px-2.5 py-0.5 text-sm font-medium border ${STATE_COLORS[p.stare] || STATE_COLORS.draft}`}>
                         {p.stare_label}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-4 text-[14px] text-muted-foreground">
                       <span>{p.organizatie_denumire}</span>
                       <span>{p.program_finantare}</span>
                       {p.buget_estimat > 0 && <span>{p.buget_estimat?.toLocaleString()} RON</span>}
