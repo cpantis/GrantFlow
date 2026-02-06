@@ -65,7 +65,8 @@ export function DocumentsPage() {
   useEffect(() => { load(); }, [filter, activeFirm]);
 
   const handleUpload = async () => {
-    if (!fileRef.current?.files[0] || !uploadForm.organizatie_id) return;
+    const orgId = uploadForm.organizatie_id || activeFirm?.id;
+    if (!fileRef.current?.files[0] || !orgId) return;
     setUploading(true);
     try {
       const fd = new FormData();
