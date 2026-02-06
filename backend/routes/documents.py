@@ -3,7 +3,8 @@ from typing import Optional, List
 import uuid
 import os
 from datetime import datetime, timezone
-from middleware.auth_middleware import get_current_user
+from middleware.auth_middleware import get_current_user, require_doc_permission
+from services.ocr_service import process_ocr, correct_ocr_field
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 db = None
