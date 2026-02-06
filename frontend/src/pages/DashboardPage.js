@@ -71,46 +71,46 @@ export function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-card border-border hover:border-primary/50 transition-colors duration-300">
-          <CardContent className="p-5 flex items-center gap-4">
+          <CardContent className="p-6 flex items-center gap-4">
             <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
               <Building2 className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Firme</p>
-              <p className="text-2xl font-bold" data-testid="stat-orgs">{orgs.length}</p>
+              <p className="text-base text-muted-foreground">Firme</p>
+              <p className="text-3xl font-bold" data-testid="stat-orgs">{orgs.length}</p>
             </div>
           </CardContent>
         </Card>
         <Card className="bg-card border-border hover:border-primary/50 transition-colors duration-300">
-          <CardContent className="p-5 flex items-center gap-4">
+          <CardContent className="p-6 flex items-center gap-4">
             <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
-              <FolderKanban className="w-6 h-6 text-blue-400" />
+              <FolderKanban className="w-6 h-6 text-blue-500" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Proiecte</p>
-              <p className="text-2xl font-bold" data-testid="stat-projects">{projects.length}</p>
+              <p className="text-base text-muted-foreground">Proiecte</p>
+              <p className="text-3xl font-bold" data-testid="stat-projects">{projects.length}</p>
             </div>
           </CardContent>
         </Card>
         <Card className="bg-card border-border hover:border-primary/50 transition-colors duration-300">
-          <CardContent className="p-5 flex items-center gap-4">
+          <CardContent className="p-6 flex items-center gap-4">
             <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-green-400" />
+              <TrendingUp className="w-6 h-6 text-green-500" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Conforme</p>
-              <p className="text-2xl font-bold" data-testid="stat-conform">{byState.conform || 0}</p>
+              <p className="text-base text-muted-foreground">Conforme</p>
+              <p className="text-3xl font-bold" data-testid="stat-conform">{byState.conform || 0}</p>
             </div>
           </CardContent>
         </Card>
         <Card className="bg-card border-border hover:border-primary/50 transition-colors duration-300">
-          <CardContent className="p-5 flex items-center gap-4">
+          <CardContent className="p-6 flex items-center gap-4">
             <div className="w-12 h-12 rounded-lg bg-red-500/10 flex items-center justify-center">
-              <AlertTriangle className="w-6 h-6 text-red-400" />
+              <AlertTriangle className="w-6 h-6 text-red-500" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Blocate</p>
-              <p className="text-2xl font-bold" data-testid="stat-blocked">{byState.blocat || 0}</p>
+              <p className="text-base text-muted-foreground">Blocate</p>
+              <p className="text-3xl font-bold" data-testid="stat-blocked">{byState.blocat || 0}</p>
             </div>
           </CardContent>
         </Card>
