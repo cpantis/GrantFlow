@@ -313,5 +313,6 @@ export function DocumentsPage() {
           )}
         </DialogContent>
       </Dialog>
+    </div>
   );
 }
