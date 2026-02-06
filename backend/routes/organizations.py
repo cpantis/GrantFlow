@@ -104,12 +104,10 @@ async def get_organization(org_id: str, current_user: dict = Depends(get_current
 
 @router.post("/{org_id}/members")
 async def add_member(org_id: str, req: AddMemberRequest, current_user: dict = Depends(get_current_user)):
+    await require_org_permission(current_user["user_id"], org_id, "manage_members")
     org = await db.organizations.find_one({"id": org_id}, {"_id": 0})
     if not org:
         raise HTTPException(status_code=404, detail="Organizație negăsită")
-    is_owner = any(m["user_id"] == current_user["user_id"] and m["rol"] == "owner" for m in org.get("members", []))
-    if not is_owner:
-        raise HTTPException(status_code=403, detail="Doar owner-ul poate adăuga membri")
     target_user = await db.users.find_one({"email": req.email}, {"_id": 0, "password_hash": 0})
     if not target_user:
         raise HTTPException(status_code=404, detail="Utilizatorul nu există")
