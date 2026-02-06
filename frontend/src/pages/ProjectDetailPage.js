@@ -224,6 +224,59 @@ export function ProjectDetailPage() {
           )}
         </TabsContent>
 
+        {/* REDACTOR AI */}
+        <TabsContent value="redactor" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-heading text-xl font-bold flex items-center gap-2">
+                <PenTool className="w-5 h-5 text-primary" />Redactor AI – Generare documente
+              </h2>
+              <p className="text-muted-foreground mt-1">Selectează un template și AI-ul va completa documentul pe baza datelor firmei și proiectului. Nu inventează date.</p>
+            </div>
+            <Link to={`/projects/${id}/writing`}>
+              <Button variant="outline" data-testid="full-writing-btn"><FileText className="w-4 h-4 mr-2" />Scriere avansată</Button>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {templates.map(t => (
+              <Card key={t.id} className="bg-card border-border hover:border-primary/30 transition-colors" data-testid={`redactor-template-${t.id}`}>
+                <CardContent className="p-5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-primary flex-shrink-0" />
+                    <p className="font-semibold">{t.label}</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{t.sectiuni.length} secțiuni: {t.sectiuni.slice(0, 2).join(', ')}{t.sectiuni.length > 2 ? ` +${t.sectiuni.length - 2}` : ''}</p>
+                  <Button size="sm" className="w-full" onClick={() => generateDraft(t.id)} disabled={generating === t.id} data-testid={`gen-draft-${t.id}`}>
+                    {generating === t.id ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Se generează...</> : <><Bot className="w-4 h-4 mr-2" />Generează</>}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {drafts.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="font-heading text-lg font-bold">Documente generate ({drafts.length})</h3>
+              {drafts.map(d => (
+                <Card key={d.id} className="bg-card border-border" data-testid={`draft-doc-${d.id}`}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      {d.template_label}
+                      <Badge variant="secondary" className="text-xs ml-auto">v{d.versiune}</Badge>
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleString('ro-RO')}</p>
+                  </CardHeader>
+                  <CardContent className="max-h-80 overflow-y-auto border-t border-border pt-3">
+                    <AiMessage text={d.continut} />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
         <TabsContent value="compliance" className="space-y-4">
           <div className="flex gap-2">
             <Button onClick={checkEligibility} disabled={eligibilityLoading} data-testid="check-eligibility-btn">
