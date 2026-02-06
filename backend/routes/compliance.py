@@ -131,3 +131,19 @@ async def check_submission_ready(project_id: str, current_user: dict = Depends(g
     all_passed = all(c["passed"] for c in checks)
     status = "READY_FOR_SUBMISSION" if all_passed else "BLOCKED"
     return {"status": status, "checks": checks, "project_id": project_id}
+
+
+@router.post("/orchestrator/{project_id}")
+async def orchestrator_check(project_id: str, current_user: dict = Depends(get_current_user)):
+    """Orchestrator Agent - checks all agents and determines needed actions."""
+    project = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proiect negăsit")
+    org = await db.organizations.find_one({"id": project.get("organizatie_id")}, {"_id": 0})
+    if not org:
+        raise HTTPException(status_code=404, detail="Firma negăsită")
+    documents = await db.documents.find({"project_id": project_id}, {"_id": 0}).to_list(100)
+    drafts = await db.drafts.find({"project_id": project_id}, {"_id": 0}).to_list(50)
+    legislation = await db.legislation.find({"project_id": project_id}, {"_id": 0}).to_list(20)
+    result = await run_orchestrator_check(project, org, documents, drafts, legislation, db)
+    return result
