@@ -313,16 +313,37 @@ export function ProjectDetailPage() {
 
         {/* REDACTOR AI */}
         <TabsContent value="redactor" className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <h2 className="font-heading text-xl font-bold flex items-center gap-2">
                 <PenTool className="w-5 h-5 text-primary" />Redactor AI – Generare documente
               </h2>
-              <p className="text-muted-foreground mt-1">Selectează un template și AI-ul va completa documentul pe baza datelor firmei și proiectului. Nu inventează date.</p>
+              <p className="text-muted-foreground mt-1">Documentele generate se salvează automat în Documente ca PDF descărcabil.</p>
             </div>
-            <Link to={`/projects/${id}/writing`}>
-              <Button variant="outline" data-testid="full-writing-btn"><FileText className="w-4 h-4 mr-2" />Scriere avansată</Button>
-            </Link>
+            <div className="flex gap-2">
+              <input type="file" id="custom-template-file" className="hidden" accept=".pdf,.doc,.docx" onChange={async (e) => {
+                if (!e.target.files[0]) return;
+                const title = prompt('Titlu document:', e.target.files[0].name.replace(/\.[^.]+$/, ''));
+                if (!title) return;
+                setGenerating('custom');
+                try {
+                  const fd = new FormData();
+                  fd.append('file', e.target.files[0]);
+                  fd.append('project_id', id);
+                  fd.append('titlu', title);
+                  const res = await api.post('/funding/generate-from-upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                  setDrafts(prev => [...prev, res.data]);
+                } catch (err) { console.error(err); }
+                setGenerating(null);
+                e.target.value = '';
+              }} />
+              <Button variant="outline" onClick={() => document.getElementById('custom-template-file').click()} disabled={generating === 'custom'} data-testid="upload-template-btn">
+                {generating === 'custom' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Se procesează...</> : <><Upload className="w-4 h-4 mr-2" />Încarcă template propriu</>}
+              </Button>
+              <Link to={`/projects/${id}/writing`}>
+                <Button variant="outline" data-testid="full-writing-btn"><FileText className="w-4 h-4 mr-2" />Scriere avansată</Button>
+              </Link>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -335,7 +356,7 @@ export function ProjectDetailPage() {
                   </div>
                   <p className="text-sm text-muted-foreground">{t.sectiuni.length} secțiuni: {t.sectiuni.slice(0, 2).join(', ')}{t.sectiuni.length > 2 ? ` +${t.sectiuni.length - 2}` : ''}</p>
                   <Button size="sm" className="w-full" onClick={() => generateDraft(t.id)} disabled={generating === t.id} data-testid={`gen-draft-${t.id}`}>
-                    {generating === t.id ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Se generează...</> : <><Bot className="w-4 h-4 mr-2" />Generează</>}
+                    {generating === t.id ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Se generează...</> : <><Bot className="w-4 h-4 mr-2" />Generează PDF</>}
                   </Button>
                 </CardContent>
               </Card>
@@ -351,9 +372,20 @@ export function ProjectDetailPage() {
                     <CardTitle className="text-base flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-500" />
                       {d.template_label}
-                      <Badge variant="secondary" className="text-xs ml-auto">v{d.versiune}</Badge>
+                      {d.template_filename && <Badge variant="outline" className="text-xs">din: {d.template_filename}</Badge>}
+                      <div className="ml-auto flex items-center gap-2">
+                        {d.pdf_url && (
+                          <a href={`${process.env.REACT_APP_BACKEND_URL}${d.pdf_url}`} target="_blank" rel="noopener noreferrer" data-testid={`download-pdf-${d.id}`}>
+                            <Button size="sm" variant="outline"><Download className="w-3.5 h-3.5 mr-1.5" />PDF</Button>
+                          </a>
+                        )}
+                        <Badge variant="secondary" className="text-xs">v{d.versiune}</Badge>
+                      </div>
                     </CardTitle>
-                    <p className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleString('ro-RO')}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(d.created_at).toLocaleString('ro-RO')}
+                      {d.document_id && <span className="ml-2 text-green-600">Salvat în Documente</span>}
+                    </p>
                   </CardHeader>
                   <CardContent className="max-h-80 overflow-y-auto border-t border-border pt-3">
                     <AiMessage text={d.continut} />
