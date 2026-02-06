@@ -54,7 +54,7 @@ export function AdminPage() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {[
           { label: 'Utilizatori', value: stats.total_users, icon: Users, color: 'text-blue-400' },
-          { label: 'Organizații', value: stats.total_organizations, icon: Building2, color: 'text-green-400' },
+          { label: 'Firme', value: stats.total_organizations, icon: Building2, color: 'text-green-600' },
           { label: 'Proiecte', value: stats.total_projects, icon: FolderKanban, color: 'text-purple-400' },
           { label: 'Documente', value: stats.total_documents, icon: FileText, color: 'text-amber-400' },
           { label: 'Specialiști', value: stats.total_specialists, icon: Shield, color: 'text-cyan-400' },
