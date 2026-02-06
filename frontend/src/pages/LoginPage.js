@@ -101,6 +101,11 @@ export function LoginPage() {
                   Înregistrare
                 </Link>
               </p>
+              <p className="text-center text-sm">
+                <Link to="/reset-password" className="text-muted-foreground hover:text-primary hover:underline" data-testid="forgot-password-link">
+                  Ai uitat parola?
+                </Link>
+              </p>
             </form>
           </CardContent>
         </Card>
