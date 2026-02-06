@@ -144,6 +144,7 @@ async def get_project(project_id: str, current_user: dict = Depends(get_current_
 
 @router.post("/{project_id}/transition")
 async def transition_project(project_id: str, req: TransitionRequest, current_user: dict = Depends(get_current_user)):
+    await require_project_permission(current_user["user_id"], project_id, "transition")
     project = await db.projects.find_one({"id": project_id}, {"_id": 0})
     if not project:
         raise HTTPException(status_code=404, detail="Proiect negăsit")
