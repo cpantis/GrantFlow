@@ -188,6 +188,7 @@ export function ProjectDetailPage() {
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="bg-muted">
           <TabsTrigger value="overview" data-testid="tab-overview">Sumar</TabsTrigger>
+          <TabsTrigger value="redactor" data-testid="tab-redactor"><PenTool className="w-4 h-4 mr-1.5" />Redactor AI</TabsTrigger>
           <TabsTrigger value="compliance" data-testid="tab-compliance">Conformitate</TabsTrigger>
           <TabsTrigger value="budget" data-testid="tab-budget">Buget</TabsTrigger>
           <TabsTrigger value="history" data-testid="tab-history">Istoric</TabsTrigger>
