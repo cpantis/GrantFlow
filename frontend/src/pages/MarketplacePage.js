@@ -90,11 +90,11 @@ export function MarketplacePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {specialists.map((s) => (
             <Card key={s.id} className="bg-card border-border hover:border-primary/50 transition-colors duration-300" data-testid={`specialist-${s.id}`}>
-              <CardContent className="p-5 space-y-4">
+              <CardContent className="p-6 space-y-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="font-medium">{s.prenume} {s.nume}</p>
-                    <p className="text-sm text-primary">{s.specializare}</p>
+                    <p className="font-semibold text-[15px]">{s.prenume} {s.nume}</p>
+                    <p className="text-base text-primary">{s.specializare}</p>
                   </div>
                   <Badge className={`rounded-full text-xs ${s.disponibilitate === 'disponibil' ? 'bg-green-500/15 text-green-400 border-green-500/20' : 'bg-amber-500/15 text-amber-400 border-amber-500/20'}`}>
                     {s.disponibilitate}
