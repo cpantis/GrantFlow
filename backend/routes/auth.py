@@ -80,8 +80,9 @@ async def register(req: RegisterRequest):
     }
     await db.users.insert_one(user_doc)
 
-    # Log verification token (in production, send via email)
-    logger.info(f"[EMAIL MOCK] Verification token for {req.email}: {verification_token}")
+    # Send verification email
+    email_result = await send_verification_email(req.email, verification_token, req.prenume)
+    logger.info(f"Verification email result for {req.email}: {email_result}")
 
     await db.audit_log.insert_one({
         "id": str(uuid.uuid4()),
