@@ -34,7 +34,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div className="dark">
+        <div>
           <Routes>
             <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
             <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
