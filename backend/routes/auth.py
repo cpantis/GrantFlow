@@ -6,6 +6,7 @@ import secrets
 from datetime import datetime, timezone, timedelta
 from services.auth_service import hash_password, verify_password, create_token
 from middleware.auth_middleware import get_current_user
+from services.email_service import send_verification_email, send_password_reset_email
 import logging
 
 logger = logging.getLogger(__name__)
