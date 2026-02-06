@@ -48,6 +48,7 @@ function App() {
               <Route path="organizations/:id" element={<OrganizationDetailPage />} />
               <Route path="projects" element={<ProjectsPage />} />
               <Route path="projects/:id" element={<ProjectDetailPage />} />
+              <Route path="projects/:id/writing" element={<ProjectWritingPage />} />
               <Route path="documents" element={<DocumentsPage />} />
               <Route path="compliance" element={<CompliancePage />} />
               <Route path="marketplace" element={<MarketplacePage />} />
