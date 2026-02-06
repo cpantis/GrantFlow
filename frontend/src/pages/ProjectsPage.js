@@ -58,6 +58,7 @@ export function ProjectsPage() {
     try {
       await api.post('/projects', {
         ...form,
+        organizatie_id: form.organizatie_id || activeFirm?.id,
         buget_estimat: parseFloat(form.buget_estimat) || 0
       });
       setForm({ titlu: '', organizatie_id: '', program_finantare: '', descriere: '', buget_estimat: '' });
