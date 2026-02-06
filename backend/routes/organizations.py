@@ -186,3 +186,26 @@ async def refresh_onrc(org_id: str, current_user: dict = Depends(get_current_use
         "updated_at": datetime.now(timezone.utc).isoformat()
     }})
     return {"message": "Date ONRC actualizate", "data": onrc_data["data"]}
+
+
+@router.delete("/{org_id}")
+async def delete_organization(org_id: str, current_user: dict = Depends(get_current_user)):
+    await require_org_permission(current_user["user_id"], org_id, "delete")
+    org = await db.organizations.find_one({"id": org_id}, {"_id": 0})
+    if not org:
+        raise HTTPException(status_code=404, detail="Firma negăsită")
+    # Check no active projects
+    active_projects = await db.projects.count_documents({"organizatie_id": org_id, "stare": {"$nin": ["arhivat", "respins"]}})
+    if active_projects > 0:
+        raise HTTPException(status_code=400, detail=f"Nu se poate șterge firma. Există {active_projects} proiecte active asociate.")
+    await db.organizations.delete_one({"id": org_id})
+    await db.audit_log.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": "organization.deleted",
+        "entity_type": "organization",
+        "entity_id": org_id,
+        "user_id": current_user["user_id"],
+        "details": {"cui": org["cui"], "denumire": org["denumire"]},
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": f"Firma '{org['denumire']}' a fost ștearsă"}
