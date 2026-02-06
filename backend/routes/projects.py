@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 import uuid
 from datetime import datetime, timezone
-from middleware.auth_middleware import get_current_user
+from middleware.auth_middleware import get_current_user, require_org_permission, require_project_permission
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 db = None
