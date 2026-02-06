@@ -156,3 +156,39 @@ async def update_document_status(doc_id: str, status: str, current_user: dict = 
         raise HTTPException(status_code=400, detail="Status invalid")
     await db.documents.update_one({"id": doc_id}, {"$set": {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}})
     return {"message": f"Status actualizat: {status}"}
+
+@router.post("/{doc_id}/ocr")
+async def trigger_ocr(doc_id: str, current_user: dict = Depends(get_current_user)):
+    """Trigger OCR processing for a document."""
+    doc = await db.documents.find_one({"id": doc_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document negăsit")
+    result = await process_ocr(doc_id, doc.get("tip", "altele"), doc.get("filename", ""), db)
+    await db.audit_log.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": "document.ocr_processed",
+        "entity_type": "document",
+        "entity_id": doc_id,
+        "user_id": current_user["user_id"],
+        "details": {"status": result["status"], "confidence": result["overall_confidence"]},
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    return result
+
+@router.get("/{doc_id}/ocr")
+async def get_ocr_data(doc_id: str, current_user: dict = Depends(get_current_user)):
+    """Get OCR results for a document."""
+    doc = await db.documents.find_one({"id": doc_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document negăsit")
+    if not doc.get("ocr_data"):
+        return {"status": "not_processed", "message": "OCR nu a fost executat pentru acest document"}
+    return doc["ocr_data"]
+
+@router.post("/{doc_id}/ocr/correct")
+async def correct_ocr(doc_id: str, field_name: str, corrected_value: str, current_user: dict = Depends(get_current_user)):
+    """Human-in-the-loop: correct an OCR field."""
+    result = await correct_ocr_field(doc_id, field_name, corrected_value, current_user["user_id"], db)
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result.get("error", "Eroare"))
+    return result
