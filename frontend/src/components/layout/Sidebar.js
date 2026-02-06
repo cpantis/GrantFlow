@@ -50,7 +50,7 @@ export function Sidebar({ collapsed, onToggle }) {
                 key={item.path}
                 to={item.path}
                 data-testid={`nav-${item.path.slice(1)}`}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-[15px] font-medium transition-colors duration-200 ${
                   isActive
                     ? 'bg-primary/10 text-primary border border-primary/20'
                     : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
