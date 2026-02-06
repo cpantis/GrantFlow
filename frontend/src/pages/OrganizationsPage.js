@@ -45,6 +45,27 @@ export function OrganizationsPage() {
     setAdding(false);
   };
 
+  const handleManualAdd = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!manualFile) { setError('Încarcă documentul ONRC'); return; }
+    if (!manualForm.cui || !manualForm.denumire) { setError('CUI și Denumire sunt obligatorii'); return; }
+    setAdding(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', manualFile);
+      Object.entries(manualForm).forEach(([k, v]) => { if (v) fd.append(k, v); });
+      await api.post('/organizations/manual', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setManualForm({ cui: '', denumire: '', forma_juridica: 'SRL', nr_reg_com: '', adresa: '', judet: '', telefon: '', data_infiintare: '' });
+      setManualFile(null);
+      setOpen(false);
+      load();
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Eroare');
+    }
+    setAdding(false);
+  };
+
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Se încarcă...</div>;
 
   return (
