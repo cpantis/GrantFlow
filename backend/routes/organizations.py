@@ -96,6 +96,104 @@ async def create_organization(req: CreateOrgRequest, current_user: dict = Depend
     org_doc.pop("_id", None)
     return org_doc
 
+
+@router.post("/manual")
+async def create_organization_manual(
+    file: UploadFile = File(...),
+    cui: str = Form(...),
+    denumire: str = Form(...),
+    forma_juridica: str = Form("SRL"),
+    nr_reg_com: Optional[str] = Form(None),
+    adresa: Optional[str] = Form(None),
+    judet: Optional[str] = Form(None),
+    telefon: Optional[str] = Form(None),
+    data_infiintare: Optional[str] = Form(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """Create organization manually by uploading ONRC certificate/document."""
+    cui_clean = cui.strip().replace("RO", "").replace("ro", "").strip()
+    existing = await db.organizations.find_one({"cui": cui_clean})
+    if existing:
+        raise HTTPException(status_code=400, detail="Firma cu acest CUI există deja")
+
+    # Save uploaded ONRC document
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "onrc")
+    os.makedirs(upload_dir, exist_ok=True)
+    doc_id = str(uuid.uuid4())
+    ext = os.path.splitext(file.filename)[1] if file.filename else ""
+    safe_name = f"{doc_id}{ext}"
+    file_path = os.path.join(upload_dir, safe_name)
+    content = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    org_id = str(uuid.uuid4())
+    org_doc = {
+        "id": org_id,
+        "cui": cui_clean,
+        "denumire": denumire.strip(),
+        "forma_juridica": forma_juridica.strip(),
+        "nr_reg_com": (nr_reg_com or "").strip(),
+        "adresa": (adresa or "").strip(),
+        "cod_postal": "",
+        "judet": (judet or "").strip(),
+        "localitate": "",
+        "stare": "ACTIVA",
+        "stare_detalii": "Adăugat manual",
+        "data_infiintare": (data_infiintare or "").strip(),
+        "telefon": (telefon or "").strip() or None,
+        "tva": None,
+        "tva_la_incasare": [],
+        "capital_social": None,
+        "caen_principal": None,
+        "caen_secundare": [],
+        "administratori": [],
+        "asociati": [],
+        "nr_angajati": None,
+        "radiata": False,
+        "certificat_constatator": None,
+        "date_financiare": None,
+        "sursa_date": "Manual + Upload ONRC",
+        "onrc_document": {
+            "id": doc_id,
+            "filename": file.filename,
+            "stored_name": safe_name,
+            "file_size": len(content),
+            "content_type": file.content_type,
+            "uploaded_at": datetime.now(timezone.utc).isoformat()
+        },
+        "meta_actualizare": {},
+        "members": [{
+            "user_id": current_user["user_id"],
+            "email": current_user["email"],
+            "rol": "owner",
+            "added_at": datetime.now(timezone.utc).isoformat()
+        }],
+        "authorizations": [],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["user_id"]
+    }
+    await db.organizations.insert_one(org_doc)
+
+    # Run OCR on uploaded document
+    try:
+        await process_ocr(doc_id, "certificat", file.filename, db)
+    except Exception:
+        pass
+
+    await db.audit_log.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": "organization.created_manual",
+        "entity_type": "organization",
+        "entity_id": org_id,
+        "user_id": current_user["user_id"],
+        "details": {"cui": cui_clean, "denumire": denumire, "sursa": "manual_upload"},
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    org_doc.pop("_id", None)
+    return org_doc
+
 @router.get("")
 async def list_organizations(current_user: dict = Depends(get_current_user)):
     orgs = await db.organizations.find(
