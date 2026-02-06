@@ -29,7 +29,7 @@ export function Sidebar({ collapsed, onToggle }) {
     <TooltipProvider delayDuration={0}>
       <aside
         data-testid="sidebar"
-        className={`fixed left-0 top-0 h-screen bg-card/50 backdrop-blur-xl border-r border-border flex flex-col z-40 transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'}`}
+        className={`fixed left-0 top-0 h-screen bg-white border-r border-border flex flex-col z-40 transition-all duration-300 shadow-sm ${collapsed ? 'w-16' : 'w-64'}`}
       >
         <div className="h-16 flex items-center px-4 border-b border-border gap-2">
           <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
