@@ -216,6 +216,21 @@ export function DocumentsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {d.ocr_status === 'completed' && (
+                    <Badge className="bg-green-500/15 text-green-400 border-green-500/20 rounded-full text-xs cursor-pointer" onClick={() => viewOcr(d.id)} data-testid={`ocr-view-${d.id}`}>
+                      <CheckCircle className="w-3 h-3 mr-1" />OCR OK
+                    </Badge>
+                  )}
+                  {d.ocr_status === 'needs_review' && (
+                    <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/20 rounded-full text-xs cursor-pointer" onClick={() => viewOcr(d.id)} data-testid={`ocr-review-${d.id}`}>
+                      <AlertTriangle className="w-3 h-3 mr-1" />Revizuire OCR
+                    </Badge>
+                  )}
+                  {d.ocr_status === 'pending' && (
+                    <Button variant="ghost" size="sm" onClick={() => triggerOcr(d.id)} disabled={ocrLoading} data-testid={`ocr-trigger-${d.id}`}>
+                      <Scan className="w-3 h-3 mr-1" />OCR
+                    </Button>
+                  )}
                   <Badge className={`rounded-full px-2 py-0.5 text-xs border ${STATUS_COLORS[d.status] || STATUS_COLORS.draft}`}>
                     {d.status}
                   </Badge>
@@ -224,6 +239,79 @@ export function DocumentsPage() {
             </Card>
           ))}
         </div>
+
+        {/* OCR Results Modal */}
+        <Dialog open={ocrOpen} onOpenChange={setOcrOpen}>
+          <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Scan className="w-5 h-5 text-primary" />Rezultate OCR
+                {ocrData?.status && (
+                  <Badge className={`rounded-full text-xs ml-2 ${
+                    ocrData.status === 'completed' ? 'bg-green-500/15 text-green-400 border-green-500/20' :
+                    ocrData.status === 'needs_review' ? 'bg-amber-500/15 text-amber-400 border-amber-500/20' :
+                    'bg-red-500/15 text-red-400 border-red-500/20'
+                  }`}>{ocrData.status}</Badge>
+                )}
+              </DialogTitle>
+            </DialogHeader>
+            {ocrData && ocrData.extracted_fields && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-4 text-sm">
+                  <span className="text-muted-foreground">Încredere generală:</span>
+                  <span className={`font-bold ${ocrData.overall_confidence >= 0.85 ? 'text-green-400' : ocrData.overall_confidence >= 0.7 ? 'text-amber-400' : 'text-red-400'}`}>
+                    {(ocrData.overall_confidence * 100).toFixed(1)}%
+                  </span>
+                  {ocrData.needs_human_review && (
+                    <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/20 rounded-full text-xs">
+                      <AlertTriangle className="w-3 h-3 mr-1" />Necesită revizuire
+                    </Badge>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {Object.entries(ocrData.extracted_fields).map(([field, value]) => {
+                    const confidence = ocrData.field_confidences?.[field] || 0;
+                    const isLow = (ocrData.low_confidence_fields || []).includes(field);
+                    return (
+                      <div key={field} className={`p-3 rounded-md border ${isLow ? 'border-amber-500/30 bg-amber-500/5' : 'border-border bg-card'}`} data-testid={`ocr-field-${field}`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-muted-foreground uppercase tracking-wider">{field.replace(/_/g, ' ')}</span>
+                          <span className={`text-xs font-mono ${confidence >= 0.85 ? 'text-green-400' : confidence >= 0.7 ? 'text-amber-400' : 'text-red-400'}`}>
+                            {(confidence * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                        {correcting === field ? (
+                          <div className="flex gap-2 mt-1">
+                            <Input size="sm" value={correctedValue} onChange={(e) => setCorrectedValue(e.target.value)} className="h-8 text-sm" data-testid={`ocr-correct-input-${field}`} />
+                            <Button size="sm" className="h-8" onClick={submitCorrection} data-testid={`ocr-correct-save-${field}`}>Salvează</Button>
+                            <Button size="sm" variant="ghost" className="h-8" onClick={() => setCorrecting(null)}>Anulează</Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">{value}</span>
+                            {isLow && (
+                              <Button variant="ghost" size="sm" className="h-6 text-xs text-amber-400" onClick={() => { setCorrecting(field); setCorrectedValue(value); }} data-testid={`ocr-correct-btn-${field}`}>
+                                Corectează
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="text-xs text-muted-foreground border-t border-border pt-3">
+                  Procesat: {ocrData.processed_at ? new Date(ocrData.processed_at).toLocaleString('ro-RO') : 'N/A'} &middot;
+                  Timp: {ocrData.processing_time_ms}ms &middot;
+                  Motor: {ocrData.engine}
+                </div>
+              </div>
+            )}
+            {ocrData && !ocrData.extracted_fields && (
+              <p className="text-muted-foreground text-sm">{ocrData.message || 'Date OCR indisponibile'}</p>
+            )}
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
