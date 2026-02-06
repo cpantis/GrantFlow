@@ -74,6 +74,7 @@ class AddExpenseRequest(BaseModel):
 
 @router.post("")
 async def create_project(req: CreateProjectRequest, current_user: dict = Depends(get_current_user)):
+    await require_org_permission(current_user["user_id"], req.organizatie_id, "create_project")
     org = await db.organizations.find_one({"id": req.organizatie_id}, {"_id": 0})
     if not org:
         raise HTTPException(status_code=404, detail="Organizație negăsită")
