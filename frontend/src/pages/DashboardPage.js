@@ -76,7 +76,7 @@ export function DashboardPage() {
               <Building2 className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Organizații</p>
+              <p className="text-sm text-muted-foreground">Firme</p>
               <p className="text-2xl font-bold" data-testid="stat-orgs">{orgs.length}</p>
             </div>
           </CardContent>
