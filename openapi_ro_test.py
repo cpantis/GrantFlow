@@ -187,7 +187,9 @@ class OpenAPIRoTester:
         result = self.log_test("Create Org with REAL CUI 18189442 (FAN Courier)", "POST", "/organizations", 200, success, data, error)
         
         if success and data:
-            self.created_org_ids.append(data.get('id'))
+            org_id = data.get('id')
+            if org_id:
+                self.created_org_ids.append(org_id)
             
             # Verify OpenAPI.ro source
             sursa = data.get('sursa_date', '')
