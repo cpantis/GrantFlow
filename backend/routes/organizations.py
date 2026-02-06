@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 import uuid
 from datetime import datetime, timezone
-from middleware.auth_middleware import get_current_user
+from middleware.auth_middleware import get_current_user, require_org_permission
 from services.onrc_service import lookup_cui, get_certificat_constatator
 from services.anaf_service import get_financial_data, get_financial_history, check_obligatii_restante
 
