@@ -662,6 +662,8 @@ class GrantFlowAPITester:
         print("="*40)
         
         self.test_compliance_submission_ready()
+        self.test_ai_navigator_with_project()
+        self.test_ai_navigator_without_project()
         
         # Admin tests
         print("\n" + "="*40)
