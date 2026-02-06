@@ -99,16 +99,16 @@ export function AdminPage() {
         <TabsContent value="users" className="space-y-2">
           {users.map((u) => (
             <Card key={u.id} className="bg-card border-border" data-testid={`user-${u.id}`}>
-              <CardContent className="p-3 flex items-center justify-between">
+              <CardContent className="p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium">{u.prenume} {u.nume}</p>
-                  <p className="text-xs text-muted-foreground">{u.email}</p>
+                  <p className="text-[15px] font-medium">{u.prenume} {u.nume}</p>
+                  <p className="text-sm text-muted-foreground">{u.email}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge className={`rounded-full text-xs ${u.is_active ? 'bg-green-500/15 text-green-400 border-green-500/20' : 'bg-red-500/15 text-red-400 border-red-500/20'}`}>
+                  <Badge className={`rounded-full text-sm ${u.is_active ? 'bg-green-500/15 text-green-600 border-green-500/20' : 'bg-red-500/15 text-red-500 border-red-500/20'}`}>
                     {u.is_active ? 'Activ' : 'Inactiv'}
                   </Badge>
-                  {u.is_admin && <Badge className="bg-primary/15 text-primary border-primary/20 rounded-full text-xs">Admin</Badge>}
+                  {u.is_admin && <Badge className="bg-primary/15 text-primary border-primary/20 rounded-full text-sm">Admin</Badge>}
                 </div>
               </CardContent>
             </Card>
