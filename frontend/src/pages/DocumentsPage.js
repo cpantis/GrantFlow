@@ -41,17 +41,19 @@ export function DocumentsPage() {
   const [correcting, setCorrecting] = useState(null);
   const [correctedValue, setCorrectedValue] = useState('');
   const fileRef = useRef(null);
+  const { activeFirm } = useFirm();
 
   const load = async () => {
     try {
       const params = {};
-      if (filter.organizatie_id) params.organizatie_id = filter.organizatie_id;
+      // Always filter by active firm
+      if (activeFirm) params.organizatie_id = activeFirm.id;
       if (filter.tip) params.tip = filter.tip;
       if (filter.faza) params.faza = filter.faza;
       const [dRes, oRes, pRes] = await Promise.all([
         api.get('/documents', { params }),
         api.get('/organizations'),
-        api.get('/projects')
+        api.get('/projects', { params: activeFirm ? { organizatie_id: activeFirm.id } : {} })
       ]);
       setDocs(dRes.data || []);
       setOrgs(oRes.data || []);
@@ -60,7 +62,7 @@ export function DocumentsPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [filter]);
+  useEffect(() => { load(); }, [filter, activeFirm]);
 
   const handleUpload = async () => {
     if (!fileRef.current?.files[0] || !uploadForm.organizatie_id) return;
