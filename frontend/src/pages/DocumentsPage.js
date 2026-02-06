@@ -71,7 +71,7 @@ export function DocumentsPage() {
     try {
       const fd = new FormData();
       fd.append('file', fileRef.current.files[0]);
-      fd.append('organizatie_id', uploadForm.organizatie_id);
+      fd.append('organizatie_id', uploadForm.organizatie_id || activeFirm?.id);
       if (uploadForm.project_id) fd.append('project_id', uploadForm.project_id);
       fd.append('tip', uploadForm.tip);
       if (uploadForm.faza) fd.append('faza', uploadForm.faza);
