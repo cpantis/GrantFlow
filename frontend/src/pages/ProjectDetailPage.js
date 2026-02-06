@@ -140,8 +140,8 @@ export function ProjectDetailPage() {
           <div className="flex items-center gap-1 overflow-x-auto pb-2">
             {ALL_STATES.map((s, i) => (
               <div key={s} className="flex items-center">
-                <div className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-all ${
-                  s === project.stare ? 'bg-primary text-primary-foreground shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+                <div className={`px-3.5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                  s === project.stare ? 'bg-primary text-primary-foreground shadow-[0_0_15px_rgba(37,99,235,0.3)]'
                   : project.history?.some(h => h.to_state === s) ? 'bg-muted text-foreground' : 'bg-muted/50 text-muted-foreground'
                 }`} data-testid={`state-${s}`}>
                   {STATE_LABELS[s]}
