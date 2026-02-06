@@ -240,8 +240,9 @@ class GrantFlowAPITester:
 
     def test_rbac_owner_create_org(self):
         """Test owner can create organization (becomes owner automatically)"""
-        # Use first user token (should become owner)
-        org_data = {"cui": "12345678"}  # Using test CUI
+        # Use unique CUI for this test run
+        unique_cui = f"1234567{uuid.uuid4().hex[:2]}"  # Generate unique CUI
+        org_data = {"cui": unique_cui}
         success, data, error = self.api_request('POST', 'organizations', org_data, expected_status=200)
         result = self.log_test("RBAC: Owner Create Org", "POST", "/organizations", 200, success, data, error)
         
