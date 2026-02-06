@@ -78,8 +78,8 @@ export function OrganizationsPage() {
         <Card className="bg-card border-border">
           <CardContent className="p-12 text-center">
             <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">Nicio organizație</h3>
-            <p className="text-muted-foreground mb-4">Adaugă prima organizație prin introducerea CUI-ului</p>
+            <h3 className="text-lg font-medium mb-2">Nicio firmă</h3>
+            <p className="text-muted-foreground mb-4">Adaugă prima firmă prin introducerea CUI-ului</p>
           </CardContent>
         </Card>
       ) : (
