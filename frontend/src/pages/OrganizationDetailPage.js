@@ -10,9 +10,12 @@ import { Building2, Users, FileText, TrendingUp, RefreshCw, ArrowLeft, Shield, C
 
 export function OrganizationDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [org, setOrg] = useState(null);
   const [financial, setFinancial] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     const load = async () => {
