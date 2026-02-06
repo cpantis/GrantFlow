@@ -31,19 +31,19 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.12),rgba(9,9,11,0))]" />
+      <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-700">
+        <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(circle at 25% 25%, white 1px, transparent 1px)', backgroundSize: '40px 40px'}} />
         <div className="relative z-10 max-w-md px-8">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center">
-              <Bot className="w-7 h-7 text-primary-foreground" />
+            <div className="w-12 h-12 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <Bot className="w-7 h-7 text-white" />
             </div>
-            <span className="font-heading text-3xl font-black tracking-tight">GrantFlow</span>
+            <span className="font-heading text-3xl font-black tracking-tight text-white">GrantFlow</span>
           </div>
-          <h1 className="font-heading text-4xl font-black tracking-tight leading-tight mb-4">
+          <h1 className="font-heading text-4xl font-black tracking-tight leading-tight mb-4 text-white">
             Dosare de finanțare.<br />Simplu. Ghidat. Predictibil.
           </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed">
+          <p className="text-lg text-blue-100 leading-relaxed">
             Platforma care automatizează identificarea eligibilității, colectarea datelor oficiale și generarea documentației pentru persoane juridice.
           </p>
         </div>
