@@ -31,6 +31,7 @@ from routes.documents import router as doc_router, set_db as doc_set_db
 from routes.compliance import router as compliance_router, set_db as compliance_set_db
 from routes.marketplace import router as marketplace_router, set_db as marketplace_set_db
 from routes.admin import router as admin_router, set_db as admin_set_db
+from routes.funding import router as funding_router, set_db as funding_set_db
 from middleware.auth_middleware import set_rbac_db
 
 # Set DB references
