@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Bot, Send, Shield, MessageSquare } from 'lucide-react';
+import { AiMessage } from '@/components/shared/AiMessage';
 
 export function CompliancePage() {
   const [projects, setProjects] = useState([]);
