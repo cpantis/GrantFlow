@@ -56,38 +56,55 @@ export function OrganizationDetailPage() {
 
         <TabsContent value="general" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Card className="bg-card border-border"><CardContent className="p-4 space-y-2">
+            <Card className="bg-card border-border"><CardContent className="p-5 space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground"><Building2 className="w-4 h-4" />Forma juridică</div>
-              <p className="font-medium">{org.forma_juridica}</p>
+              <p className="font-semibold text-lg">{org.forma_juridica}</p>
             </CardContent></Card>
-            <Card className="bg-card border-border"><CardContent className="p-4 space-y-2">
+            <Card className="bg-card border-border"><CardContent className="p-5 space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground"><MapPin className="w-4 h-4" />Adresă</div>
-              <p className="font-medium text-sm">{org.adresa}</p>
+              <p className="font-medium">{org.adresa}</p>
+              {org.cod_postal && <p className="text-sm text-muted-foreground">Cod poștal: {org.cod_postal}</p>}
             </CardContent></Card>
-            <Card className="bg-card border-border"><CardContent className="p-4 space-y-2">
+            <Card className="bg-card border-border"><CardContent className="p-5 space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground"><Calendar className="w-4 h-4" />Înființare</div>
-              <p className="font-medium">{org.data_infiintare}</p>
+              <p className="font-semibold text-lg">{org.data_infiintare || 'N/A'}</p>
             </CardContent></Card>
-            <Card className="bg-card border-border"><CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground"><Users className="w-4 h-4" />Angajați</div>
-              <p className="font-medium">{org.nr_angajati}</p>
+            <Card className="bg-card border-border"><CardContent className="p-5 space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground"><FileText className="w-4 h-4" />Nr. Reg. Com.</div>
+              <p className="font-semibold">{org.nr_reg_com || 'N/A'}</p>
             </CardContent></Card>
-            <Card className="bg-card border-border"><CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground"><TrendingUp className="w-4 h-4" />Capital social</div>
-              <p className="font-medium">{org.capital_social?.toLocaleString()} RON</p>
-            </CardContent></Card>
-            <Card className="bg-card border-border"><CardContent className="p-4 space-y-2">
+            {org.telefon && <Card className="bg-card border-border"><CardContent className="p-5 space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground"><Users className="w-4 h-4" />Telefon</div>
+              <p className="font-semibold">{org.telefon}</p>
+            </CardContent></Card>}
+            <Card className="bg-card border-border"><CardContent className="p-5 space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground"><Shield className="w-4 h-4" />Status</div>
-              <Badge className="bg-green-500/15 text-green-400 border-green-500/20 rounded-full">{org.stare}</Badge>
+              <Badge className={`rounded-full text-sm px-3 py-1 ${org.stare === 'ACTIVA' ? 'bg-green-500/15 text-green-600 border-green-500/20' : 'bg-red-500/15 text-red-500 border-red-500/20'}`}>{org.stare}</Badge>
+              {org.stare_detalii && <p className="text-xs text-muted-foreground mt-1">{org.stare_detalii}</p>}
             </CardContent></Card>
+            {org.tva && <Card className="bg-card border-border"><CardContent className="p-5 space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground"><TrendingUp className="w-4 h-4" />Plătitor TVA</div>
+              <p className="font-semibold">Din {org.tva}</p>
+            </CardContent></Card>}
+            {org.nr_angajati && <Card className="bg-card border-border"><CardContent className="p-5 space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground"><Users className="w-4 h-4" />Angajați</div>
+              <p className="font-semibold text-lg">{org.nr_angajati}</p>
+            </CardContent></Card>}
+            {org.capital_social && <Card className="bg-card border-border"><CardContent className="p-5 space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground"><TrendingUp className="w-4 h-4" />Capital social</div>
+              <p className="font-semibold text-lg">{org.capital_social?.toLocaleString()} RON</p>
+            </CardContent></Card>}
           </div>
+          {org.sursa_date && (
+            <p className="text-xs text-muted-foreground">Sursă date: {org.sursa_date} &middot; Actualizat: {org.meta_actualizare?.updated_at?.slice(0, 10) || 'N/A'}</p>
+          )}
           {org.certificat_constatator && (
             <Card className="bg-card border-border"><CardHeader><CardTitle className="text-base">Certificat Constatator</CardTitle></CardHeader>
-              <CardContent className="text-sm space-y-1">
+              <CardContent className="space-y-1">
                 <p>Nr: {org.certificat_constatator.numar}</p>
                 <p>Emis: {org.certificat_constatator.data_emitere}</p>
-                <p>Valabil până: {org.certificat_constatator.valabil_pana}</p>
-                <Badge className="bg-green-500/15 text-green-400 border-green-500/20 rounded-full mt-2">{org.certificat_constatator.status}</Badge>
+                {org.certificat_constatator.valabil_pana && <p>Valabil până: {org.certificat_constatator.valabil_pana}</p>}
+                <Badge className="bg-green-500/15 text-green-600 border-green-500/20 rounded-full mt-2">{org.certificat_constatator.status}</Badge>
               </CardContent>
             </Card>
           )}
