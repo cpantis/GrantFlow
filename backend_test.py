@@ -258,7 +258,7 @@ class GrantFlowAPITester:
             return self.log_test("RBAC: Owner Manage Members", "POST", f"/organizations/{self.org_id}/members", 200, False, None, "Missing org_id or second_user")
         
         member_data = {
-            "user_id": self.second_user_data['id'],
+            "email": self.second_user_data['email'],  # Use email, not user_id
             "rol": "imputernicit"
         }
         success, data, error = self.api_request('POST', f'organizations/{self.org_id}/members', member_data, expected_status=200)
@@ -275,7 +275,7 @@ class GrantFlowAPITester:
         
         # Try to add a member (should fail with 403)
         dummy_member_data = {
-            "user_id": "dummy-user-id",
+            "email": "dummy@example.com",  # Use email format
             "rol": "consultant"
         }
         success, data, error = self.api_request('POST', f'organizations/{self.org_id}/members', dummy_member_data, expected_status=403)
