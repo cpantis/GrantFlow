@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Building2, ArrowUpRight, Search, MapPin, Hash } from 'lucide-react';
+import { Plus, Building2, ArrowUpRight, Search, MapPin, Hash, Upload } from 'lucide-react';
 
 export function OrganizationsPage() {
   const [orgs, setOrgs] = useState([]);
@@ -16,6 +16,9 @@ export function OrganizationsPage() {
   const [adding, setAdding] = useState(false);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');
+  const [mode, setMode] = useState('auto'); // 'auto' | 'manual'
+  const [manualForm, setManualForm] = useState({ cui: '', denumire: '', forma_juridica: 'SRL', nr_reg_com: '', adresa: '', judet: '', telefon: '', data_infiintare: '' });
+  const [manualFile, setManualFile] = useState(null);
 
   const load = async () => {
     try {
