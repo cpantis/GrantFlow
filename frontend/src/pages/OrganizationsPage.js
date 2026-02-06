@@ -53,7 +53,7 @@ export function OrganizationsPage() {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button data-testid="add-org-btn"><Plus className="w-4 h-4 mr-2" />Adaugă organizație</Button>
+            <Button data-testid="add-org-btn"><Plus className="w-4 h-4 mr-2" />Adaugă firmă</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
