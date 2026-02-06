@@ -48,6 +48,44 @@ export function OrganizationDetailPage() {
           <p className="text-muted-foreground text-sm">CUI: {org.cui} &middot; {org.nr_reg_com}</p>
         </div>
         <Button variant="outline" onClick={refreshOnrc} data-testid="refresh-onrc-btn"><RefreshCw className="w-4 h-4 mr-2" />Actualizare ONRC</Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" className="text-destructive hover:bg-destructive/10 border-destructive/30" data-testid="delete-org-btn">
+              <Trash2 className="w-4 h-4 mr-2" />Șterge firma
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Șterge firma {org?.denumire}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Această acțiune este ireversibilă. Firma și toate datele asociate vor fi șterse permanent.
+                {deleteError && <span className="block mt-2 text-destructive font-medium">{deleteError}</span>}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Anulează</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={deleting}
+                onClick={async (e) => {
+                  e.preventDefault();
+                  setDeleting(true);
+                  setDeleteError('');
+                  try {
+                    await api.delete(`/organizations/${id}`);
+                    navigate('/organizations');
+                  } catch (err) {
+                    setDeleteError(err.response?.data?.detail || 'Eroare la ștergere');
+                    setDeleting(false);
+                  }
+                }}
+                data-testid="confirm-delete-btn"
+              >
+                {deleting ? 'Se șterge...' : 'Confirmă ștergerea'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <Tabs defaultValue="general" className="space-y-4">
