@@ -124,7 +124,7 @@ export function ProjectsPage() {
           <CardContent className="p-12 text-center">
             <FolderKanban className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">Niciun proiect</h3>
-            <p className="text-muted-foreground">{orgs.length === 0 ? 'Adaugă mai întâi o organizație' : 'Creează primul proiect de finanțare'}</p>
+            <p className="text-muted-foreground">{orgs.length === 0 ? 'Adaugă mai întâi o firmă' : 'Creează primul proiect de finanțare'}</p>
           </CardContent>
         </Card>
       ) : (
