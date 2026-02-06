@@ -57,7 +57,7 @@ export function OrganizationsPage() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Adaugă organizație după CUI</DialogTitle>
+              <DialogTitle>Adaugă firmă după CUI</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleAdd} className="space-y-4">
               {error && <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm">{error}</div>}
