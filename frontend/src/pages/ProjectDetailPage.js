@@ -58,6 +58,8 @@ export function ProjectDetailPage() {
   const [templates, setTemplates] = useState([]);
   const [drafts, setDrafts] = useState([]);
   const [generating, setGenerating] = useState(null);
+  const [orchestratorReport, setOrchestratorReport] = useState(null);
+  const [orchestratorLoading, setOrchestratorLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
