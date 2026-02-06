@@ -123,7 +123,9 @@ export function DocumentsPage() {
     <div data-testid="documents-page" className="space-y-6">
       <div>
         <h1 className="font-heading text-3xl font-bold tracking-tight">Documente</h1>
-        <p className="text-muted-foreground mt-1">Biblioteca de documente cu versionare și taxonomie</p>
+        <p className="text-muted-foreground mt-1">
+          {activeFirm ? <><span className="text-primary font-medium">{activeFirm.denumire}</span> &middot; CUI: {activeFirm.cui}</> : 'Selectează o firmă din meniul lateral'}
+        </p>
       </div>
 
       {/* Upload section */}
