@@ -236,6 +236,81 @@ export function ProjectDetailPage() {
           )}
         </TabsContent>
 
+        {/* ORCHESTRATOR */}
+        <TabsContent value="orchestrator" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-heading text-xl font-bold flex items-center gap-2">
+                <Zap className="w-5 h-5 text-primary" />Agent Coordonator
+              </h2>
+              <p className="text-muted-foreground mt-1">Verifică starea tuturor agenților și determină acțiunile necesare</p>
+            </div>
+            <Button onClick={runOrchestrator} disabled={orchestratorLoading} data-testid="run-orchestrator-btn" size="lg">
+              {orchestratorLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Se analizează...</> : <><Zap className="w-4 h-4 mr-2" />Verificare completă</>}
+            </Button>
+          </div>
+
+          {orchestratorReport && (
+            <div className="space-y-4">
+              {/* Agent Status Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {orchestratorReport.checks?.map((c, i) => (
+                  <Card key={i} className={`border ${c.status === 'ok' ? 'border-green-500/30 bg-green-500/5' : c.status === 'actiune_necesara' ? 'border-red-500/30 bg-red-500/5' : 'border-amber-500/30 bg-amber-500/5'}`} data-testid={`agent-check-${c.agent}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CircleDot className={`w-4 h-4 ${c.status === 'ok' ? 'text-green-500' : c.status === 'actiune_necesara' ? 'text-red-500' : 'text-amber-500'}`} />
+                        <span className="font-semibold text-sm">{c.agent}</span>
+                      </div>
+                      {c.issues?.length > 0 ? (
+                        <ul className="space-y-1">{c.issues.map((issue, j) => (
+                          <li key={j} className="text-sm text-muted-foreground flex items-start gap-1.5">
+                            <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0 text-amber-500" />
+                            {issue}
+                          </li>
+                        ))}</ul>
+                      ) : (
+                        <p className="text-sm text-green-600">Totul e în ordine</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Summary bar */}
+              <Card className={`border ${orchestratorReport.needs_action ? 'border-amber-500/30' : 'border-green-500/30'}`}>
+                <CardContent className="p-4 flex items-center gap-3">
+                  {orchestratorReport.needs_action ? (
+                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                  ) : (
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  )}
+                  <span className="font-medium">
+                    {orchestratorReport.needs_action
+                      ? `${orchestratorReport.total_issues} acțiuni necesare`
+                      : 'Toți agenții sunt la zi'}
+                  </span>
+                </CardContent>
+              </Card>
+
+              {/* AI Analysis */}
+              <Card className="bg-card border-border">
+                <CardHeader><CardTitle className="text-base flex items-center gap-2">
+                  <Bot className="w-5 h-5 text-primary" />Analiză Orchestrator AI
+                </CardTitle></CardHeader>
+                <CardContent><AiMessage text={orchestratorReport.ai_analysis} /></CardContent>
+              </Card>
+            </div>
+          )}
+
+          {!orchestratorReport && !orchestratorLoading && (
+            <Card className="bg-card border-border"><CardContent className="p-10 text-center">
+              <Zap className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Agent Coordonator</h3>
+              <p className="text-muted-foreground">Apasă "Verificare completă" pentru a analiza starea tuturor agenților și a determina ce acțiuni sunt necesare.</p>
+            </CardContent></Card>
+          )}
+        </TabsContent>
+
         {/* REDACTOR AI */}
         <TabsContent value="redactor" className="space-y-6">
           <div className="flex items-center justify-between">
