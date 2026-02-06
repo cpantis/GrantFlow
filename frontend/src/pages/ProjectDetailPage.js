@@ -234,7 +234,7 @@ export function ProjectDetailPage() {
                 <span className="text-xs text-muted-foreground ml-auto">{new Date(r.created_at).toLocaleDateString('ro-RO')}</span>
               </CardTitle>
             </CardHeader><CardContent>
-              <div className="text-sm whitespace-pre-wrap text-muted-foreground max-h-64 overflow-y-auto">{r.result}</div>
+              <AiMessage text={r.result} />
             </CardContent></Card>
           ))}
         </TabsContent>
