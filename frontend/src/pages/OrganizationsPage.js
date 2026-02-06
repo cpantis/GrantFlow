@@ -67,7 +67,7 @@ export function OrganizationsPage() {
                 <p className="text-xs text-muted-foreground">Datele vor fi preluate automat din ONRC</p>
               </div>
               <Button type="submit" disabled={adding} className="w-full" data-testid="org-submit-btn">
-                {adding ? 'Se preiau datele...' : 'Adaugă organizația'}
+                {adding ? 'Se preiau datele...' : 'Adaugă firma'}
               </Button>
             </form>
           </DialogContent>
