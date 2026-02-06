@@ -33,7 +33,7 @@ export function OrganizationDetailPage() {
   };
 
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Se încarcă...</div>;
-  if (!org) return <div className="text-center text-muted-foreground">Organizația nu a fost găsită</div>;
+  if (!org) return <div className="text-center text-muted-foreground">Firma nu a fost găsită</div>;
 
   return (
     <div data-testid="org-detail-page" className="space-y-6">
