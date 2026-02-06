@@ -26,6 +26,23 @@ class GrantFlowAPITester:
             "prenume": "TestPrenume",
             "telefon": "0722123456"
         }
+        
+        # RBAC test data
+        self.second_user_email = f"imputernicit_{uuid.uuid4().hex[:8]}@example.com"
+        self.second_user_password = "TestPass123!"
+        self.second_user = {
+            "email": self.second_user_email,
+            "password": self.second_user_password,
+            "nume": "ImputernicitNume",
+            "prenume": "ImputernicitPrenume",
+            "telefon": "0722654321"
+        }
+        self.second_token = None
+        self.second_user_data = None
+        
+        # Email verification and password reset tokens
+        self.verification_token = None
+        self.reset_token = None
 
     def log_test(self, name, method, endpoint, expected_status, result, response_data=None, error=None):
         """Log test result"""
