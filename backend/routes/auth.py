@@ -159,6 +159,8 @@ async def resend_verification(current_user: dict = Depends(get_current_user)):
     })
 
     logger.info(f"[EMAIL MOCK] New verification token for {user['email']}: {new_token}")
+    # Send verification email
+    await send_verification_email(user['email'], new_token, user.get('prenume', ''))
     return {"message": "Token de verificare retrimis", "verification_token": new_token}
 
 @router.post("/login")
