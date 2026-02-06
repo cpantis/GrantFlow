@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, List
 import uuid
+import os
 from datetime import datetime, timezone
 from middleware.auth_middleware import get_current_user
 from services.funding_service import (
@@ -10,6 +12,7 @@ from services.funding_service import (
     get_draft_templates, get_draft_template
 )
 from services.ai_service import check_eligibility, generate_document_section, validate_coherence
+from services.pdf_service import generate_pdf
 
 router = APIRouter(prefix="/api/funding", tags=["funding"])
 db = None
