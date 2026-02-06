@@ -48,8 +48,8 @@ export function OrganizationsPage() {
     <div data-testid="organizations-page" className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-3xl font-bold tracking-tight">Organizații</h1>
-          <p className="text-muted-foreground mt-1">Gestionează firmele și instituțiile</p>
+          <h1 className="font-heading text-3xl font-bold tracking-tight">Firme</h1>
+          <p className="text-muted-foreground mt-1">Gestionează firmele înregistrate</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
