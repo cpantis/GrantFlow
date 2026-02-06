@@ -1,0 +1,142 @@
+{
+  "identity": {
+    "name": "GrantFlow",
+    "persona": "E1 - The Anti-AI Designer",
+    "tone": "Professional, Trustworthy, Efficient, High-Contrast",
+    "theme": "dark",
+    "archetype": "Swiss & High-Contrast (Adapted for Dark Mode)",
+    "language": "ro"
+  },
+  "typography": {
+    "font_family": {
+      "heading": "Chivo, sans-serif",
+      "body": "IBM Plex Sans, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none",
+      "h2": "text-3xl md:text-4xl font-bold tracking-tight",
+      "h3": "text-2xl font-bold tracking-tight",
+      "body_lg": "text-lg leading-relaxed",
+      "body_base": "text-base leading-relaxed",
+      "caption": "text-sm text-muted-foreground uppercase tracking-widest"
+    },
+    "installation": "Import from Google Fonts: @import url('https://fonts.googleapis.com/css2?family=Chivo:wght@300;400;700;900&family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');"
+  },
+  "colors": {
+    "palette": {
+      "background": "#09090b",
+      "foreground": "#fafafa",
+      "card": "#18181b",
+      "card_foreground": "#fafafa",
+      "popover": "#18181b",
+      "popover_foreground": "#fafafa",
+      "primary": "#3b82f6",
+      "primary_foreground": "#ffffff",
+      "secondary": "#27272a",
+      "secondary_foreground": "#fafafa",
+      "muted": "#27272a",
+      "muted_foreground": "#a1a1aa",
+      "accent": "#27272a",
+      "accent_foreground": "#fafafa",
+      "destructive": "#ef4444",
+      "destructive_foreground": "#ffffff",
+      "border": "#27272a",
+      "input": "#27272a",
+      "ring": "#3b82f6",
+      "ai_glow": "#a855f7",
+      "success": "#22c55e",
+      "warning": "#f59e0b"
+    },
+    "gradients": {
+      "hero_glow": "radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.15), rgba(9, 9, 11, 0))",
+      "ai_pulse": "linear-gradient(90deg, #3b82f6, #a855f7)"
+    },
+    "rules": [
+      "No gradients for text.",
+      "No full-screen gradients.",
+      "Use 1px borders (#27272a) to define structure, not shadows.",
+      "AI elements should have a subtle purple/blue glow."
+    ]
+  },
+  "layout": {
+    "spacing": {
+      "container_padding": "p-6 md:p-8 lg:p-12",
+      "section_gap": "gap-8 md:gap-12",
+      "component_gap": "gap-4"
+    },
+    "grid_system": {
+      "dashboard": "grid grid-cols-1 md:grid-cols-12 gap-6",
+      "marketing": "grid grid-cols-1 md:grid-cols-8 lg:grid-cols-12 gap-8 md:gap-12"
+    },
+    "sidebar": {
+      "width": "w-64",
+      "collapsed_width": "w-16",
+      "style": "border-r border-border bg-card/50 backdrop-blur-xl"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary hover:bg-primary/90 text-primary-foreground rounded-md shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-all duration-300 hover:shadow-[0_0_20px_rgba(59,130,246,0.6)]",
+      "secondary": "bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-md border border-border transition-all duration-200",
+      "ghost": "hover:bg-accent hover:text-accent-foreground rounded-md transition-all duration-200",
+      "outline": "border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md"
+    },
+    "cards": {
+      "dashboard": "bg-card border border-border rounded-md shadow-sm hover:border-primary/50 transition-colors duration-300 relative overflow-hidden",
+      "marketing": "bg-transparent border border-white/10 rounded-lg backdrop-blur-sm hover:bg-white/5 transition-all duration-300"
+    },
+    "inputs": {
+      "style": "bg-input/50 border-input focus:border-primary focus:ring-1 focus:ring-primary rounded-md h-10 px-3 text-sm placeholder:text-muted-foreground/70"
+    },
+    "badges": {
+      "status_success": "bg-success/15 text-success border border-success/20 rounded-full px-2.5 py-0.5 text-xs font-medium",
+      "status_pending": "bg-warning/15 text-warning border border-warning/20 rounded-full px-2.5 py-0.5 text-xs font-medium",
+      "status_error": "bg-destructive/15 text-destructive border border-destructive/20 rounded-full px-2.5 py-0.5 text-xs font-medium",
+      "ai_tag": "bg-purple-500/15 text-purple-400 border border-purple-500/20 rounded-full px-2.5 py-0.5 text-xs font-medium flex items-center gap-1"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": "backdrop-blur-xl bg-background/70 border-b border-white/5",
+    "noise_texture": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E\")",
+    "glow_effects": "shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+  },
+  "assets": {
+    "images": {
+      "hero_abstract": "https://images.unsplash.com/photo-1759771963975-8a4885446f1f?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "hero_secondary": "https://images.unsplash.com/photo-1754348523191-6705920cdb4a?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "profile_male": "https://images.unsplash.com/photo-1769636929261-e913ed023c83?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "profile_female": "https://images.pexels.com/photos/1181519/pexels-photo-1181519.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+      "factory_thumb": "https://images.unsplash.com/photo-1717386255773-1e3037c81788?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "solar_thumb": "https://images.unsplash.com/photo-1761158495585-eac721decf1b?crop=entropy&cs=srgb&fm=jpg&q=85"
+    },
+    "icons_library": "lucide-react"
+  },
+  "accessibility": {
+    "contrast_check": "Ensure text is at least 4.5:1 against background. Use lighter grays (#d4d4d8) for body text on dark backgrounds.",
+    "focus_states": "ring-2 ring-primary ring-offset-2 ring-offset-background",
+    "reduced_motion": "Respect 'prefers-reduced-motion' media query."
+  },
+  "instructions_to_main_agent": [
+    "Use 'Chivo' for all Headings and 'IBM Plex Sans' for body.",
+    "Implement the dark theme by default using the provided hex codes.",
+    "Use the Bento Grid layout for the dashboard overview.",
+    "For the AI Agent Dashboard, create a node-graph visualization using 'recharts' (scatter chart customized) or SVG if simple, or install 'react-flow-renderer' if permitted.",
+    "Sidebar must be collapsible.",
+    "Use the 'status_success', 'status_pending' badge styles for project states.",
+    "Login page should use the 'hero_abstract' image as a subtle background with an overlay.",
+    "Ensure all interactive elements have hover states defined in the 'buttons' section.",
+    "Do not use gradients for text.",
+    "Use 1px borders to define structure.",
+    "Add 'data-testid' to all interactive elements."
+  ],
+  "universal_guidelines": [
+    "Dark colors look good when used independently without gradients.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur).",
+    "Do not apply 'transition: all'. Use specific transitions.",
+    "Do not center align the app container.",
+    "Use 'sonner' for toasts.",
+    "Export components as named exports."
+  ]
+}
