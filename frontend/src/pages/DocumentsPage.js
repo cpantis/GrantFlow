@@ -128,7 +128,7 @@ export function DocumentsPage() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label>Organizație *</Label>
+              <Label>Firmă *</Label>
               <Select value={uploadForm.organizatie_id} onValueChange={(v) => setUploadForm({ ...uploadForm, organizatie_id: v })}>
                 <SelectTrigger data-testid="doc-org-select"><SelectValue placeholder="Selectează" /></SelectTrigger>
                 <SelectContent>{orgs.map((o) => <SelectItem key={o.id} value={o.id}>{o.denumire}</SelectItem>)}</SelectContent>
