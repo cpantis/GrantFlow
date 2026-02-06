@@ -29,33 +29,45 @@ class CreateAuthorizationRequest(BaseModel):
 
 @router.post("")
 async def create_organization(req: CreateOrgRequest, current_user: dict = Depends(get_current_user)):
-    existing = await db.organizations.find_one({"cui": req.cui})
+    cui_clean = req.cui.strip().replace("RO", "").replace("ro", "").strip()
+    existing = await db.organizations.find_one({"cui": cui_clean})
     if existing:
-        raise HTTPException(status_code=400, detail="Organizația cu acest CUI există deja")
-    onrc_data = await lookup_cui(req.cui)
+        raise HTTPException(status_code=400, detail="Firma cu acest CUI există deja în platformă")
+    onrc_data = await lookup_cui(cui_clean)
     if not onrc_data["success"]:
-        raise HTTPException(status_code=400, detail="CUI invalid sau indisponibil")
-    cert = await get_certificat_constatator(req.cui)
-    financial = await get_financial_data(req.cui)
+        detail = onrc_data.get("error", "CUI invalid sau indisponibil")
+        raise HTTPException(status_code=400, detail=detail)
+    d = onrc_data["data"]
+    cert = await get_certificat_constatator(cui_clean)
+    financial = await get_financial_data(cui_clean)
     org_id = str(uuid.uuid4())
     org_doc = {
         "id": org_id,
-        "cui": req.cui,
-        "denumire": onrc_data["data"]["denumire"],
-        "forma_juridica": onrc_data["data"]["forma_juridica"],
-        "nr_reg_com": onrc_data["data"]["nr_reg_com"],
-        "adresa": onrc_data["data"]["adresa"],
-        "judet": onrc_data["data"]["judet"],
-        "stare": onrc_data["data"]["stare"],
-        "data_infiintare": onrc_data["data"]["data_infiintare"],
-        "capital_social": onrc_data["data"]["capital_social"],
-        "caen_principal": onrc_data["data"]["caen_principal"],
-        "caen_secundare": onrc_data["data"]["caen_secundare"],
-        "administratori": onrc_data["data"]["administratori"],
-        "asociati": onrc_data["data"]["asociati"],
-        "nr_angajati": onrc_data["data"]["nr_angajati"],
+        "cui": d.get("cui", cui_clean),
+        "denumire": d.get("denumire", ""),
+        "forma_juridica": d.get("forma_juridica", ""),
+        "nr_reg_com": d.get("nr_reg_com", ""),
+        "adresa": d.get("adresa", ""),
+        "cod_postal": d.get("cod_postal", ""),
+        "judet": d.get("judet", ""),
+        "localitate": d.get("localitate", ""),
+        "stare": d.get("stare", "NECUNOSCUT"),
+        "stare_detalii": d.get("stare_detalii", ""),
+        "data_infiintare": d.get("data_infiintare", ""),
+        "telefon": d.get("telefon"),
+        "tva": d.get("tva"),
+        "tva_la_incasare": d.get("tva_la_incasare", []),
+        "capital_social": d.get("capital_social"),
+        "caen_principal": d.get("caen_principal"),
+        "caen_secundare": d.get("caen_secundare", []),
+        "administratori": d.get("administratori", []),
+        "asociati": d.get("asociati", []),
+        "nr_angajati": d.get("nr_angajati"),
+        "radiata": d.get("radiata", False),
         "certificat_constatator": cert.get("certificat"),
         "date_financiare": financial.get("data"),
+        "sursa_date": d.get("sursa", "OpenAPI.ro"),
+        "meta_actualizare": d.get("meta", {}),
         "members": [
             {
                 "user_id": current_user["user_id"],
@@ -76,7 +88,7 @@ async def create_organization(req: CreateOrgRequest, current_user: dict = Depend
         "entity_type": "organization",
         "entity_id": org_id,
         "user_id": current_user["user_id"],
-        "details": {"cui": req.cui, "denumire": org_doc["denumire"]},
+        "details": {"cui": cui_clean, "denumire": org_doc["denumire"], "sursa": "OpenAPI.ro"},
         "timestamp": datetime.now(timezone.utc).isoformat()
     })
     org_doc.pop("_id", None)
