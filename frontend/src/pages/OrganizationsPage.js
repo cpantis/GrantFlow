@@ -106,60 +106,50 @@ export function OrganizationsPage() {
                 </Button>
               </form>
             ) : (
-              <form onSubmit={handleManualAdd} className="space-y-4">
-                <div className="p-3 rounded-md bg-primary/5 border border-primary/20 text-sm">
-                  <p className="font-medium">Upload certificat constatator / document ONRC</p>
-                  <p className="text-muted-foreground text-xs mt-1">Documentul va fi procesat OCR automat pentru extragerea datelor.</p>
+              <form onSubmit={handleManualAdd} className="space-y-5">
+                <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                  <p className="font-medium text-[15px]">Încarcă documentele și agenții vor face restul:</p>
+                  <p className="text-sm text-muted-foreground mt-1">Upload → OCR automat → Extragere date → Validare → Stocare</p>
                 </div>
+
                 <div className="space-y-2">
-                  <Label>Document ONRC *</Label>
-                  <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setManualFile(e.target.files[0])} data-testid="manual-file-input" />
+                  <Label className="text-[15px] font-semibold flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-primary" />Certificat constatator / Document ONRC *
+                  </Label>
+                  <Input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => setOnrcFile(e.target.files[0])}
+                    data-testid="manual-onrc-input"
+                    className="cursor-pointer"
+                  />
+                  <p className="text-xs text-muted-foreground">Se vor extrage automat: CUI, denumire, adresă, nr. reg. com., formă juridică</p>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-sm">CUI *</Label>
-                    <Input value={manualForm.cui} onChange={(e) => setManualForm({ ...manualForm, cui: e.target.value })} placeholder="ex: 14399840" required data-testid="manual-cui-input" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-sm">Denumire firmă *</Label>
-                    <Input value={manualForm.denumire} onChange={(e) => setManualForm({ ...manualForm, denumire: e.target.value })} placeholder="SC Exemplu SRL" required data-testid="manual-denumire-input" />
-                  </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[15px] font-semibold flex items-center gap-2">
+                    <Hash className="w-4 h-4 text-primary" />Carte de identitate (CI) administrator *
+                  </Label>
+                  <Input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => setCiFile(e.target.files[0])}
+                    data-testid="manual-ci-input"
+                    className="cursor-pointer"
+                  />
+                  <p className="text-xs text-muted-foreground">Se vor extrage automat: nume, CNP, adresă, date identificare</p>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-sm">Formă juridică</Label>
-                    <Select value={manualForm.forma_juridica} onValueChange={(v) => setManualForm({ ...manualForm, forma_juridica: v })}>
-                      <SelectTrigger data-testid="manual-forma-select"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {['SRL', 'SA', 'PFA', 'II', 'SCS', 'SNC', 'ONG'].map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+
+                {onrcFile && ciFile && (
+                  <div className="p-3 rounded-lg bg-green-500/5 border border-green-500/20 text-sm">
+                    <p className="font-medium text-green-700">Documente selectate:</p>
+                    <p className="text-muted-foreground">ONRC: {onrcFile.name} ({(onrcFile.size / 1024).toFixed(0)} KB)</p>
+                    <p className="text-muted-foreground">CI: {ciFile.name} ({(ciFile.size / 1024).toFixed(0)} KB)</p>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-sm">Nr. Reg. Comerțului</Label>
-                    <Input value={manualForm.nr_reg_com} onChange={(e) => setManualForm({ ...manualForm, nr_reg_com: e.target.value })} placeholder="J40/123/2020" data-testid="manual-regcom-input" />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm">Adresă sediu social</Label>
-                  <Input value={manualForm.adresa} onChange={(e) => setManualForm({ ...manualForm, adresa: e.target.value })} placeholder="Str. Exemplu nr. 10, București" data-testid="manual-adresa-input" />
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-sm">Județ</Label>
-                    <Input value={manualForm.judet} onChange={(e) => setManualForm({ ...manualForm, judet: e.target.value })} placeholder="București" data-testid="manual-judet-input" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-sm">Telefon</Label>
-                    <Input value={manualForm.telefon} onChange={(e) => setManualForm({ ...manualForm, telefon: e.target.value })} data-testid="manual-telefon-input" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-sm">Data înființare</Label>
-                    <Input type="date" value={manualForm.data_infiintare} onChange={(e) => setManualForm({ ...manualForm, data_infiintare: e.target.value })} data-testid="manual-data-input" />
-                  </div>
-                </div>
-                <Button type="submit" disabled={adding} className="w-full" data-testid="manual-submit-btn">
-                  {adding ? 'Se adaugă...' : 'Adaugă firma manual'}
+                )}
+
+                <Button type="submit" disabled={adding || !onrcFile || !ciFile} className="w-full" data-testid="manual-submit-btn">
+                  {adding ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Agenții procesează documentele...</> : <><Upload className="w-4 h-4 mr-2" />Procesează și creează firma</>}
                 </Button>
               </form>
             )}
