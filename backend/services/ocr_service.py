@@ -102,7 +102,7 @@ async def process_ocr(doc_id: str, doc_type: str, filename: str, db, file_path: 
     # Determine content type
     ext = os.path.splitext(file_path)[1].lower()
     ct_map = {".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png"}
-    content_type = ct_map.get(ext, "application/octet-stream")
+    content_type = ct_map.get(ext)
 
     # Select prompt based on doc type
     if doc_type in ["ci", "buletin"]:
@@ -112,10 +112,21 @@ async def process_ocr(doc_id: str, doc_type: str, filename: str, db, file_path: 
 
     try:
         chat = _get_vision_chat("Ești un expert OCR specializat pe documente oficiale românești. Extragi date structurate din imagini/PDF-uri.")
-        message = UserMessage(
-            text=prompt,
-            file_contents=[FileContent(content_type=content_type, file_content_base64=file_b64)]
-        )
+
+        if content_type in ["image/jpeg", "image/png", "application/pdf"]:
+            # Image/PDF: send as file attachment
+            message = UserMessage(
+                text=prompt,
+                file_contents=[FileContent(content_type=content_type, file_content_base64=file_b64)]
+            )
+        else:
+            # Text/other: read content and send as text
+            try:
+                text_content = file_bytes.decode("utf-8", errors="replace")
+            except Exception:
+                text_content = file_bytes.decode("latin-1", errors="replace")
+            message = UserMessage(text=f"{prompt}\n\nCONȚINUT DOCUMENT:\n{text_content[:8000]}")
+
         response = await chat.send_message(message)
 
         # Parse JSON from response
