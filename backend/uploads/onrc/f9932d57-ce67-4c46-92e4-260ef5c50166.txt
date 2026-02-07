@@ -1,0 +1,14 @@
+CARTE DE IDENTITATE
+Seria RX Număr 456789
+CNP: 1850315400123
+Nume: POPESCU
+Prenume: ION ALEXANDRU
+Data naștere: 15.03.1985
+Sex: M
+Cetățenie: Română
+Domiciliu: Str. Florilor nr. 10, Bl. A3, Sc. 1, Et. 2, Ap. 8
+Localitatea: București
+Județul: București
+Emis de: SPCEP S1 biroul nr. 3
+Data emitere: 20.06.2022
+Data expirare: 20.06.2032
