@@ -15,6 +15,7 @@ const navItems = [
   { path: '/organizations', label: 'Firme', icon: Building2 },
   { path: '/projects', label: 'Proiecte', icon: FolderKanban },
   { path: '/documents', label: 'Documente', icon: FileText },
+  { path: '/agents', label: 'Agenți AI', icon: Bot },
   { path: '/admin', label: 'Admin', icon: Settings },
 ];
 
