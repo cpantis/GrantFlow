@@ -199,6 +199,16 @@ async def create_organization_manual(
             "ocr_status": ci_ocr.get("status"), "ocr_confidence": ci_ocr.get("overall_confidence"),
             "uploaded_at": datetime.now(timezone.utc).isoformat()
         },
+        "administrator_ci": {
+            "nume": ci_fields.get("nume"),
+            "prenume": ci_fields.get("prenume"),
+            "cnp": ci_fields.get("cnp"),
+            "serie_ci": ci_fields.get("serie"),
+            "numar_ci": ci_fields.get("numar"),
+            "adresa_domiciliu": ci_fields.get("adresa"),
+            "data_nastere": ci_fields.get("data_nastere"),
+            "data_expirare_ci": ci_fields.get("data_expirare")
+        },
         "ocr_results": {
             "onrc": onrc_ocr,
             "ci": ci_ocr
