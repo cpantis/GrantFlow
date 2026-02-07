@@ -123,18 +123,33 @@ async def create_organization_manual(
     with open(os.path.join(upload_dir, ci_safe), "wb") as f:
         f.write(ci_content)
 
-    # Agent Parser: OCR both documents
-    onrc_ocr = await process_ocr(onrc_id, "certificat", onrc_file.filename, db)
-    ci_ocr = await process_ocr(ci_id, "ci", ci_file.filename, db)
+    # Agent Parser: OCR both documents with file paths
+    onrc_path = os.path.join(upload_dir, onrc_safe)
+    ci_path = os.path.join(upload_dir, ci_safe)
+    onrc_ocr = await process_ocr(onrc_id, "certificat", onrc_file.filename, db, file_path=onrc_path)
+    ci_ocr = await process_ocr(ci_id, "ci", ci_file.filename, db, file_path=ci_path)
 
     # Agent Colector: Extract firm data from OCR results
     onrc_fields = onrc_ocr.get("extracted_fields", {})
     ci_fields = ci_ocr.get("extracted_fields", {})
 
-    # Derive firm data from OCR
-    cui_extracted = onrc_fields.get("cui_firma", onrc_fields.get("cui", ""))
-    denumire_extracted = onrc_fields.get("denumire_firma", onrc_fields.get("denumire", ""))
-    admin_name = ci_fields.get("nume", "") + " " + ci_fields.get("prenume", "")
+    # Derive firm data from real OCR
+    cui_extracted = str(onrc_fields.get("cui", onrc_fields.get("cui_firma", ""))).strip()
+    denumire_extracted = onrc_fields.get("denumire", onrc_fields.get("denumire_firma", ""))
+    admin_name = ""
+    if ci_fields.get("nume") and ci_fields.get("prenume"):
+        admin_name = f"{ci_fields['nume']} {ci_fields['prenume']}"
+    elif ci_fields.get("nume"):
+        admin_name = ci_fields["nume"]
+
+    # Extract CAEN codes
+    caen_principal = onrc_fields.get("caen_principal")
+    caen_secundare = onrc_fields.get("caen_secundare", [])
+    if isinstance(caen_principal, str):
+        caen_principal = {"cod": caen_principal, "descriere": ""}
+    
+    administratori_onrc = onrc_fields.get("administratori", [])
+    asociati_onrc = onrc_fields.get("asociati", [])
 
     # Validate: check CUI not empty
     if not cui_extracted:
