@@ -55,6 +55,7 @@ function App() {
               <Route path="compliance" element={<CompliancePage />} />
               <Route path="marketplace" element={<MarketplacePage />} />
               <Route path="admin" element={<AdminPage />} />
+              <Route path="agents" element={<AgentsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
