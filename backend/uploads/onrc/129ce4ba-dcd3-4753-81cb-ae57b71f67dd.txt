@@ -1,0 +1,19 @@
+CERTIFICAT CONSTATATOR
+Nr. 12345/2025
+
+OFICIUL NATIONAL AL REGISTRULUI COMERTULUI
+
+Firma: SC EXEMPLU DIGITAL SRL
+CUI: 45678901
+Nr. Reg. Com.: J40/5678/2021
+Sediu social: Str. Victoriei nr. 25, Sector 1, București
+Cod poștal: 010061
+Județ: București
+Capital social: 10000 RON
+Data înființare: 15.03.2021
+Stare: ACTIVA
+CAEN Principal: 6201 - Activități de realizare a soft-ului la comandă
+CAEN Secundar: 6202 - Activități de consultanță în tehnologia informației
+CAEN Secundar: 6311 - Prelucrarea datelor
+Administrator: POPESCU ION ALEXANDRU - Administrator
+Asociat: POPESCU ION ALEXANDRU - 100%
