@@ -16,7 +16,6 @@ const navItems = [
   { path: '/projects', label: 'Proiecte', icon: FolderKanban },
   { path: '/documents', label: 'Documente', icon: FileText },
   { path: '/compliance', label: 'Conformitate', icon: Shield },
-  { path: '/marketplace', label: 'Specialiști', icon: Users },
   { path: '/admin', label: 'Admin', icon: Settings },
 ];
 
