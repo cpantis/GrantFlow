@@ -49,20 +49,20 @@ export function OrganizationsPage() {
   const handleManualAdd = async (e) => {
     e.preventDefault();
     setError('');
-    if (!manualFile) { setError('Încarcă documentul ONRC'); return; }
-    if (!manualForm.cui || !manualForm.denumire) { setError('CUI și Denumire sunt obligatorii'); return; }
+    if (!onrcFile) { setError('Încarcă documentul ONRC'); return; }
+    if (!ciFile) { setError('Încarcă cartea de identitate (CI)'); return; }
     setAdding(true);
     try {
       const fd = new FormData();
-      fd.append('file', manualFile);
-      Object.entries(manualForm).forEach(([k, v]) => { if (v) fd.append(k, v); });
+      fd.append('onrc_file', onrcFile);
+      fd.append('ci_file', ciFile);
       await api.post('/organizations/manual', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setManualForm({ cui: '', denumire: '', forma_juridica: 'SRL', nr_reg_com: '', adresa: '', judet: '', telefon: '', data_infiintare: '' });
-      setManualFile(null);
+      setOnrcFile(null);
+      setCiFile(null);
       setOpen(false);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Eroare');
+      setError(err.response?.data?.detail || 'Eroare la procesare');
     }
     setAdding(false);
   };
