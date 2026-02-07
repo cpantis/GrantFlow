@@ -15,7 +15,6 @@ const navItems = [
   { path: '/organizations', label: 'Firme', icon: Building2 },
   { path: '/projects', label: 'Proiecte', icon: FolderKanban },
   { path: '/documents', label: 'Documente', icon: FileText },
-  { path: '/compliance', label: 'Conformitate', icon: Shield },
   { path: '/admin', label: 'Admin', icon: Settings },
 ];
 
