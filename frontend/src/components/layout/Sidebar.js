@@ -3,8 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFirm } from '@/contexts/FirmContext';
 import {
-  LayoutDashboard, Building2, FolderKanban, FileText, Shield,
-  Users, Settings, LogOut, ChevronLeft, ChevronRight, Bot, ChevronsUpDown, Check
+  LayoutDashboard, Building2, FolderKanban, FileText,
+  Settings, LogOut, ChevronLeft, ChevronRight, Bot, ChevronsUpDown, Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
