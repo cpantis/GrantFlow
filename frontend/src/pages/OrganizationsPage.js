@@ -17,9 +17,9 @@ export function OrganizationsPage() {
   const [adding, setAdding] = useState(false);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');
-  const [mode, setMode] = useState('auto'); // 'auto' | 'manual'
-  const [manualForm, setManualForm] = useState({ cui: '', denumire: '', forma_juridica: 'SRL', nr_reg_com: '', adresa: '', judet: '', telefon: '', data_infiintare: '' });
-  const [manualFile, setManualFile] = useState(null);
+  const [mode, setMode] = useState('auto');
+  const [onrcFile, setOnrcFile] = useState(null);
+  const [ciFile, setCiFile] = useState(null);
 
   const load = async () => {
     try {
