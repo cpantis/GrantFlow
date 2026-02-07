@@ -56,6 +56,7 @@ app.include_router(compliance_router)
 app.include_router(marketplace_router)
 app.include_router(admin_router)
 app.include_router(funding_router)
+app.include_router(agents_router)
 
 @app.get("/api")
 async def root():
