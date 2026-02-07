@@ -186,7 +186,7 @@ async def create_organization_manual(
         "obiect_activitate": onrc_fields.get("obiect_activitate", ""),
         "certificat_constatator": None,
         "date_financiare": None,
-        "sursa_date": "Upload ONRC + CI (OCR automat)",
+        "sursa_date": "Upload ONRC + CI (GPT-5.2 Vision OCR)",
         "onrc_document": {
             "id": onrc_id, "filename": onrc_file.filename, "stored_name": onrc_safe,
             "file_size": len(onrc_content), "content_type": onrc_file.content_type,
