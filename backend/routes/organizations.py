@@ -99,69 +99,95 @@ async def create_organization(req: CreateOrgRequest, current_user: dict = Depend
 
 @router.post("/manual")
 async def create_organization_manual(
-    file: UploadFile = File(...),
-    cui: str = Form(...),
-    denumire: str = Form(...),
-    forma_juridica: str = Form("SRL"),
-    nr_reg_com: Optional[str] = Form(None),
-    adresa: Optional[str] = Form(None),
-    judet: Optional[str] = Form(None),
-    telefon: Optional[str] = Form(None),
-    data_infiintare: Optional[str] = Form(None),
+    onrc_file: UploadFile = File(...),
+    ci_file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
-    """Create organization manually by uploading ONRC certificate/document."""
-    cui_clean = cui.strip().replace("RO", "").replace("ro", "").strip()
-    existing = await db.organizations.find_one({"cui": cui_clean})
-    if existing:
-        raise HTTPException(status_code=400, detail="Firma cu acest CUI există deja")
-
-    # Save uploaded ONRC document
+    """Create organization by uploading ONRC + CI. Agents handle OCR → extract → validate → store."""
     upload_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "onrc")
     os.makedirs(upload_dir, exist_ok=True)
-    doc_id = str(uuid.uuid4())
-    ext = os.path.splitext(file.filename)[1] if file.filename else ""
-    safe_name = f"{doc_id}{ext}"
-    file_path = os.path.join(upload_dir, safe_name)
-    content = await file.read()
-    with open(file_path, "wb") as f:
-        f.write(content)
+
+    # Save ONRC document
+    onrc_id = str(uuid.uuid4())
+    onrc_ext = os.path.splitext(onrc_file.filename)[1] if onrc_file.filename else ""
+    onrc_safe = f"{onrc_id}{onrc_ext}"
+    onrc_content = await onrc_file.read()
+    with open(os.path.join(upload_dir, onrc_safe), "wb") as f:
+        f.write(onrc_content)
+
+    # Save CI document
+    ci_id = str(uuid.uuid4())
+    ci_ext = os.path.splitext(ci_file.filename)[1] if ci_file.filename else ""
+    ci_safe = f"{ci_id}{ci_ext}"
+    ci_content = await ci_file.read()
+    with open(os.path.join(upload_dir, ci_safe), "wb") as f:
+        f.write(ci_content)
+
+    # Agent Parser: OCR both documents
+    onrc_ocr = await process_ocr(onrc_id, "certificat", onrc_file.filename, db)
+    ci_ocr = await process_ocr(ci_id, "ci", ci_file.filename, db)
+
+    # Agent Colector: Extract firm data from OCR results
+    onrc_fields = onrc_ocr.get("extracted_fields", {})
+    ci_fields = ci_ocr.get("extracted_fields", {})
+
+    # Derive firm data from OCR
+    cui_extracted = onrc_fields.get("cui_firma", onrc_fields.get("cui", ""))
+    denumire_extracted = onrc_fields.get("denumire_firma", onrc_fields.get("denumire", ""))
+    admin_name = ci_fields.get("nume", "") + " " + ci_fields.get("prenume", "")
+
+    # Validate: check CUI not empty
+    if not cui_extracted:
+        cui_extracted = "NECUNOSCUT"
+
+    existing = await db.organizations.find_one({"cui": cui_extracted})
+    if existing and cui_extracted != "NECUNOSCUT":
+        raise HTTPException(status_code=400, detail=f"Firma cu CUI {cui_extracted} există deja")
 
     org_id = str(uuid.uuid4())
     org_doc = {
         "id": org_id,
-        "cui": cui_clean,
-        "denumire": denumire.strip(),
-        "forma_juridica": forma_juridica.strip(),
-        "nr_reg_com": (nr_reg_com or "").strip(),
-        "adresa": (adresa or "").strip(),
+        "cui": cui_extracted,
+        "denumire": denumire_extracted or "Firmă din documente",
+        "forma_juridica": _detect_forma(denumire_extracted),
+        "nr_reg_com": onrc_fields.get("numar_contract", onrc_fields.get("nr_reg_com", "")),
+        "adresa": onrc_fields.get("adresa", ci_fields.get("adresa", "")),
         "cod_postal": "",
-        "judet": (judet or "").strip(),
-        "localitate": "",
+        "judet": onrc_fields.get("judet", ""),
+        "localitate": onrc_fields.get("localitate", ""),
         "stare": "ACTIVA",
-        "stare_detalii": "Adăugat manual",
-        "data_infiintare": (data_infiintare or "").strip(),
-        "telefon": (telefon or "").strip() or None,
+        "stare_detalii": "Extras automat din documente (OCR)",
+        "data_infiintare": onrc_fields.get("data_infiintare", ""),
+        "telefon": onrc_fields.get("telefon", None),
         "tva": None,
         "tva_la_incasare": [],
         "capital_social": None,
         "caen_principal": None,
         "caen_secundare": [],
-        "administratori": [],
+        "administratori": [{"nume": admin_name.strip(), "functie": "Administrator", "sursa": "CI OCR"}] if admin_name.strip() else [],
         "asociati": [],
         "nr_angajati": None,
         "radiata": False,
         "certificat_constatator": None,
         "date_financiare": None,
-        "sursa_date": "Manual + Upload ONRC",
+        "sursa_date": "Upload ONRC + CI (OCR automat)",
         "onrc_document": {
-            "id": doc_id,
-            "filename": file.filename,
-            "stored_name": safe_name,
-            "file_size": len(content),
-            "content_type": file.content_type,
+            "id": onrc_id, "filename": onrc_file.filename, "stored_name": onrc_safe,
+            "file_size": len(onrc_content), "content_type": onrc_file.content_type,
+            "ocr_status": onrc_ocr.get("status"), "ocr_confidence": onrc_ocr.get("overall_confidence"),
             "uploaded_at": datetime.now(timezone.utc).isoformat()
         },
+        "ci_document": {
+            "id": ci_id, "filename": ci_file.filename, "stored_name": ci_safe,
+            "file_size": len(ci_content), "content_type": ci_file.content_type,
+            "ocr_status": ci_ocr.get("status"), "ocr_confidence": ci_ocr.get("overall_confidence"),
+            "uploaded_at": datetime.now(timezone.utc).isoformat()
+        },
+        "ocr_results": {
+            "onrc": onrc_ocr,
+            "ci": ci_ocr
+        },
+        "needs_review": onrc_ocr.get("needs_human_review", False) or ci_ocr.get("needs_human_review", False),
         "meta_actualizare": {},
         "members": [{
             "user_id": current_user["user_id"],
@@ -176,23 +202,48 @@ async def create_organization_manual(
     }
     await db.organizations.insert_one(org_doc)
 
-    # Run OCR on uploaded document
-    try:
-        await process_ocr(doc_id, "certificat", file.filename, db)
-    except Exception:
-        pass
+    # Store documents in documents collection too
+    for doc_info, doc_type in [({"id": onrc_id, "filename": onrc_file.filename, "stored_name": onrc_safe, "size": len(onrc_content), "ct": onrc_file.content_type, "ocr": onrc_ocr}, "certificat"),
+                                ({"id": ci_id, "filename": ci_file.filename, "stored_name": ci_safe, "size": len(ci_content), "ct": ci_file.content_type, "ocr": ci_ocr}, "ci")]:
+        await db.documents.insert_one({
+            "id": doc_info["id"], "filename": doc_info["filename"], "stored_name": doc_info["stored_name"],
+            "file_size": doc_info["size"], "content_type": doc_info["ct"],
+            "organizatie_id": org_id, "project_id": None,
+            "tip": doc_type, "faza": None, "status": "draft",
+            "descriere": f"Upload automat - {'ONRC' if doc_type == 'certificat' else 'CI'}",
+            "versiune": 1,
+            "versions": [{"versiune": 1, "filename": doc_info["filename"], "stored_name": doc_info["stored_name"], "file_size": doc_info["size"], "uploaded_at": datetime.now(timezone.utc).isoformat(), "uploaded_by": current_user["user_id"]}],
+            "ocr_status": doc_info["ocr"].get("status", "pending"),
+            "ocr_data": doc_info["ocr"], "tags": ["upload_manual"],
+            "created_at": datetime.now(timezone.utc).isoformat(), "updated_at": datetime.now(timezone.utc).isoformat(), "created_by": current_user["user_id"]
+        })
 
     await db.audit_log.insert_one({
         "id": str(uuid.uuid4()),
-        "action": "organization.created_manual",
+        "action": "organization.created_from_documents",
         "entity_type": "organization",
         "entity_id": org_id,
         "user_id": current_user["user_id"],
-        "details": {"cui": cui_clean, "denumire": denumire, "sursa": "manual_upload"},
+        "details": {
+            "cui_extracted": cui_extracted,
+            "denumire_extracted": denumire_extracted,
+            "onrc_confidence": onrc_ocr.get("overall_confidence"),
+            "ci_confidence": ci_ocr.get("overall_confidence"),
+            "needs_review": org_doc["needs_review"]
+        },
         "timestamp": datetime.now(timezone.utc).isoformat()
     })
     org_doc.pop("_id", None)
     return org_doc
+
+
+def _detect_forma(denumire: str) -> str:
+    d = (denumire or "").upper()
+    if "S.R.L" in d or "SRL" in d: return "SRL"
+    if "S.A." in d or " SA" in d: return "SA"
+    if "PFA" in d: return "PFA"
+    if "I.I." in d: return "II"
+    return "SRL"
 
 @router.get("")
 async def list_organizations(current_user: dict = Depends(get_current_user)):
