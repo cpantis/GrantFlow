@@ -56,7 +56,7 @@ export function DashboardPage() {
 
   return (
     <div data-testid="dashboard-page" className="space-y-8">
-      {user && !user.email_verified && (
+      {user && false && !user.email_verified && (
         <div className="p-4 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center justify-between" data-testid="verify-email-banner">
           <div className="flex items-center gap-3">
             <Mail className="w-5 h-5 text-amber-400" />
