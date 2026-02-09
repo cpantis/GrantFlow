@@ -47,6 +47,7 @@ marketplace_set_db(db)
 admin_set_db(db)
 funding_set_db(db)
 agents_set_db(db)
+integrations_set_db(db)
 
 # Include routers
 app.include_router(auth_router)
