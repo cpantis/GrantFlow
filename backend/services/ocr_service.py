@@ -71,6 +71,69 @@ IMPORTANT:
 - Dacă un câmp nu e vizibil/lizibil, pune null
 - CNP trebuie să aibă exact 13 cifre"""
 
+FACTURA_PROMPT = """Analizează această factură fiscală din România.
+Extrage TOATE datele și returnează STRICT un JSON valid:
+{
+  "numar_factura": "string",
+  "data_factura": "string YYYY-MM-DD",
+  "furnizor": "string - denumire furnizor",
+  "cui_furnizor": "string",
+  "client": "string - denumire client",
+  "cui_client": "string",
+  "produse": "string - lista produselor/serviciilor",
+  "valoare_fara_tva": "number",
+  "tva": "number",
+  "total": "number - total cu TVA",
+  "moneda": "string - RON/EUR"
+}
+IMPORTANT: Returnează DOAR JSON-ul. Dacă un câmp lipsește, pune null."""
+
+CONTRACT_PROMPT = """Analizează acest contract din România.
+Extrage datele și returnează STRICT un JSON valid:
+{
+  "numar_contract": "string",
+  "data_contract": "string YYYY-MM-DD",
+  "parte_1": "string - prima parte contractuală",
+  "cui_parte_1": "string",
+  "parte_2": "string - a doua parte",
+  "cui_parte_2": "string",
+  "obiect": "string - obiectul contractului",
+  "valoare": "number",
+  "moneda": "string",
+  "durata": "string",
+  "data_start": "string YYYY-MM-DD",
+  "data_sfarsit": "string YYYY-MM-DD"
+}
+IMPORTANT: Returnează DOAR JSON-ul. Dacă un câmp lipsește, pune null."""
+
+BILANT_PROMPT = """Analizează acest bilanț/balanță contabilă din România.
+Extrage datele și returnează STRICT un JSON valid:
+{
+  "an_fiscal": "string",
+  "cui_firma": "string",
+  "denumire_firma": "string",
+  "cifra_afaceri": "number",
+  "profit_net": "number",
+  "active_totale": "number",
+  "datorii_totale": "number",
+  "capitaluri_proprii": "number",
+  "numar_angajati": "number"
+}
+IMPORTANT: Returnează DOAR JSON-ul. Dacă un câmp lipsește, pune null."""
+
+GENERIC_PROMPT = """Analizează acest document.
+Extrage TOATE informațiile relevante și returnează un JSON valid cu câmpurile detectate.
+Structura JSON trebuie să reflecte conținutul documentului (chei descriptive, valori extrase).
+IMPORTANT: Returnează DOAR JSON-ul, fără text suplimentar."""
+
+PROMPT_MAP = {
+    "ci": CI_PROMPT, "buletin": CI_PROMPT,
+    "certificat": ONRC_PROMPT, "onrc": ONRC_PROMPT,
+    "factura": FACTURA_PROMPT,
+    "contract": CONTRACT_PROMPT,
+    "bilant": BILANT_PROMPT, "balanta": BILANT_PROMPT,
+}
+
 
 async def process_ocr(doc_id: str, doc_type: str, filename: str, db, file_path: str = None) -> dict:
     """Process a document using GPT-5.2 Vision for real OCR extraction."""
