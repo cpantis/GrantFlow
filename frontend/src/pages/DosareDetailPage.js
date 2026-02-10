@@ -159,6 +159,38 @@ export function DosareDetailPage() {
           </div>
         </TabsContent>
 
+        {/* ORCHESTRATOR */}
+        <TabsContent value="orchestrator" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-heading text-lg font-bold flex items-center gap-2"><Zap className="w-5 h-5 text-primary" />Agent Coordonator</h2>
+              <p className="text-muted-foreground text-sm">Verifică starea tuturor agenților pentru acest dosar</p>
+            </div>
+            <Button onClick={runOrchestrator} disabled={orchestratorLoading} data-testid="run-orchestrator-btn">
+              {orchestratorLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Se analizează...</> : <><Zap className="w-4 h-4 mr-2" />Verificare completă</>}
+            </Button>
+          </div>
+          {orchestratorReport && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                {orchestratorReport.checks?.map((c, i) => (
+                  <Card key={i} className={`border ${c.status === 'ok' ? 'border-green-200 bg-green-50/50' : c.status === 'actiune_necesara' ? 'border-red-200 bg-red-50/50' : 'border-amber-200 bg-amber-50/50'}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        {c.status === 'ok' ? <CheckCircle className="w-4 h-4 text-green-500" /> : <AlertTriangle className="w-4 h-4 text-amber-500" />}
+                        <span className="font-semibold text-sm">{c.agent}</span>
+                      </div>
+                      {c.issues?.length > 0 ? <ul className="space-y-1">{c.issues.map((is2, j) => <li key={j} className="text-xs text-muted-foreground">{is2}</li>)}</ul> : <p className="text-xs text-green-600">OK</p>}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <Card className="bg-card border-border"><CardHeader><CardTitle className="text-base flex items-center gap-2"><Bot className="w-4 h-4 text-primary" />Analiză AI</CardTitle></CardHeader>
+                <CardContent><AiMessage text={orchestratorReport.ai_analysis} /></CardContent></Card>
+            </div>
+          )}
+        </TabsContent>
+
         <TabsContent value="guide" className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-heading text-lg font-bold">Ghid solicitant & Anexe</h2>
