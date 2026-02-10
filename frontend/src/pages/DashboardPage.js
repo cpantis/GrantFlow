@@ -204,8 +204,8 @@ function MoltBot({ activeFirm }) {
           {!activeFirm && !chatLoading && chatHistory.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-6">Selectează o firmă din sidebar pentru a primi recomandări de finanțare.</p>
           )}
-          {chatLoading && chatHistory.length === 0 && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground py-4"><Loader2 className="w-4 h-4 animate-spin" />Analizez profilul firmei și programele disponibile...</div>
+          {activeFirm && !chatLoading && chatHistory.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-6">Apasă <strong>Send</strong> sau modifică întrebarea predefinită, apoi trimite.</p>
           )}
           {chatHistory.map((m, i) => (
             <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
