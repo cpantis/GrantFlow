@@ -1,9 +1,11 @@
-"""Legacy funding routes - delegates to v2/applications"""
+"""DEPRECATED - Legacy funding routes. All new code uses /api/v2/. Do not add new routes here."""
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
 import os
+import logging
 
-router = APIRouter(prefix="/api/funding", tags=["funding-legacy"])
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/api/funding", tags=["funding-deprecated"])
 db = None
 
 def set_db(database):
