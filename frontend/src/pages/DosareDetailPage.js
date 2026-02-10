@@ -176,9 +176,32 @@ export function DosareDetailPage() {
   const docs = app.documents || [];
   const drafts = app.drafts || [];
   const folders = app.folder_groups || [];
+  const guides = app.guide_assets || [];
+
+  // Compute step completion for tab badges
+  const tabStatus = {
+    guide: guides.length > 0 ? 'done' : 'todo',
+    config: (app.tip_proiect && app.budget_estimated > 0) ? 'done' : (app.tip_proiect || app.budget_estimated ? 'partial' : 'todo'),
+    preeligibility: preeligReport ? 'done' : 'todo',
+    achizitii: achizitii.length > 0 ? 'done' : 'todo',
+    checklist: app.checklist_frozen ? 'done' : (reqDocs.length > 0 ? 'partial' : 'todo'),
+    documents: reqDocs.length > 0 && reqDocs.every(r => r.status === 'uploaded') ? 'done' : (docs.length > 0 ? 'partial' : 'todo'),
+    drafts: drafts.length >= 2 ? 'done' : (drafts.length > 0 ? 'partial' : 'todo'),
+    validation: validationReport?.type === 'validation' ? 'done' : 'todo',
+  };
+  const completedSteps = Object.values(tabStatus).filter(s => s === 'done').length;
+  const totalSteps = Object.keys(tabStatus).length;
+  const progressPct = Math.round((completedSteps / totalSteps) * 100);
+
+  const StatusDot = ({ status }) => {
+    if (status === 'done') return <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />;
+    if (status === 'partial') return <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />;
+    return <span className="w-2 h-2 rounded-full bg-zinc-300 inline-block" />;
+  };
 
   return (
-    <div data-testid="dosar-detail-page" className="space-y-6">
+    <div data-testid="dosar-detail-page" className="space-y-5">
+      {/* Header */}
       <div className="flex items-center gap-3">
         <Link to="/dosare"><Button variant="ghost" size="icon"><ArrowLeft className="w-4 h-4" /></Button></Link>
         <div className="flex-1">
@@ -193,41 +216,54 @@ export function DosareDetailPage() {
         </a>
       </div>
 
-      {/* Progress bar */}
-      <Card className="bg-card border-border"><CardContent className="p-3">
-        <div className="flex items-center gap-0.5 overflow-x-auto">
+      {/* Progress + Next step */}
+      <Card className="bg-card border-border"><CardContent className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="text-2xl font-bold text-primary">{progressPct}%</div>
+            <div>
+              <p className="text-sm font-medium">Progres dosar</p>
+              <p className="text-xs text-muted-foreground">{completedSteps}/{totalSteps} pași finalizați</p>
+            </div>
+          </div>
+          {possibleNext.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Pasul următor:</span>
+              {possibleNext.map(s => (
+                <Button key={s} size="sm" onClick={() => transition(s)} disabled={transitioning} data-testid={`transition-${s}`}>
+                  <ArrowRight className="w-3 h-3 mr-1" />{STATE_LABELS[s]}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="w-full bg-muted rounded-full h-2">
+          <div className="bg-primary h-2 rounded-full transition-all duration-500" style={{width: `${progressPct}%`}} />
+        </div>
+        {/* Compact state steps */}
+        <div className="flex items-center gap-0.5 overflow-x-auto pt-1">
           {STATES.map((s, i) => (
             <div key={s} className="flex items-center">
-              <div className={`px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap ${i === stateIndex ? 'bg-primary text-white shadow-md' : i < stateIndex ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>{STATE_LABELS[s]}</div>
-              {i < STATES.length - 1 && <ArrowRight className="w-3 h-3 text-muted-foreground mx-0.5 flex-shrink-0" />}
+              <div className={`px-2 py-1 rounded text-[11px] font-medium whitespace-nowrap ${i === stateIndex ? 'bg-primary text-white shadow-sm' : i < stateIndex ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground/60'}`}>{STATE_LABELS[s]}</div>
+              {i < STATES.length - 1 && <ArrowRight className="w-2.5 h-2.5 text-muted-foreground/40 mx-0.5 flex-shrink-0" />}
             </div>
           ))}
         </div>
       </CardContent></Card>
 
-      {possibleNext.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm text-muted-foreground">Pasul următor:</span>
-          {possibleNext.map(s => (
-            <Button key={s} size="sm" onClick={() => transition(s)} disabled={transitioning} data-testid={`transition-${s}`}>
-              <ArrowRight className="w-3 h-3 mr-1" />{STATE_LABELS[s]}
-            </Button>
-          ))}
-        </div>
-      )}
-
+      {/* Tabs with status dots */}
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="bg-muted flex-wrap h-auto py-1">
           <TabsTrigger value="overview">Sumar</TabsTrigger>
           <TabsTrigger value="orchestrator"><Zap className="w-4 h-4 mr-1" />Orchestrator</TabsTrigger>
-          <TabsTrigger value="guide"><BookOpen className="w-4 h-4 mr-1" />Legislație</TabsTrigger>
-          <TabsTrigger value="config"><Settings className="w-4 h-4 mr-1" />Configurare</TabsTrigger>
-          <TabsTrigger value="preeligibility"><Shield className="w-4 h-4 mr-1" />Pre-eligibilitate</TabsTrigger>
-          <TabsTrigger value="achizitii"><ShoppingCart className="w-4 h-4 mr-1" />Achiziții</TabsTrigger>
-          <TabsTrigger value="checklist"><CheckCircle className="w-4 h-4 mr-1" />Checklist</TabsTrigger>
-          <TabsTrigger value="documents"><FolderOpen className="w-4 h-4 mr-1" />Documente</TabsTrigger>
-          <TabsTrigger value="drafts"><PenTool className="w-4 h-4 mr-1" />Drafturi</TabsTrigger>
-          <TabsTrigger value="validation"><Shield className="w-4 h-4 mr-1" />Evaluare</TabsTrigger>
+          <TabsTrigger value="guide" className="gap-1.5"><StatusDot status={tabStatus.guide} /><BookOpen className="w-4 h-4" />Legislație</TabsTrigger>
+          <TabsTrigger value="config" className="gap-1.5"><StatusDot status={tabStatus.config} /><Settings className="w-4 h-4" />Configurare</TabsTrigger>
+          <TabsTrigger value="preeligibility" className="gap-1.5"><StatusDot status={tabStatus.preeligibility} /><Shield className="w-4 h-4" />Pre-eligibilitate</TabsTrigger>
+          <TabsTrigger value="achizitii" className="gap-1.5"><StatusDot status={tabStatus.achizitii} /><ShoppingCart className="w-4 h-4" />Achiziții</TabsTrigger>
+          <TabsTrigger value="checklist" className="gap-1.5"><StatusDot status={tabStatus.checklist} /><CheckCircle className="w-4 h-4" />Checklist</TabsTrigger>
+          <TabsTrigger value="documents" className="gap-1.5"><StatusDot status={tabStatus.documents} /><FolderOpen className="w-4 h-4" />Documente</TabsTrigger>
+          <TabsTrigger value="drafts" className="gap-1.5"><StatusDot status={tabStatus.drafts} /><PenTool className="w-4 h-4" />Drafturi</TabsTrigger>
+          <TabsTrigger value="validation" className="gap-1.5"><StatusDot status={tabStatus.validation} /><Shield className="w-4 h-4" />Evaluare</TabsTrigger>
           <TabsTrigger value="history">Istoric</TabsTrigger>
         </TabsList>
 
