@@ -342,6 +342,7 @@ export function DosareDetailPage() {
                     {g.extraction_status === 'completed' && <Badge className="bg-green-50 text-green-600 text-xs"><CheckCircle className="w-3 h-3 mr-1" />Procesat</Badge>}
                     {g.extraction_status === 'error' && <Badge className="bg-red-50 text-red-500 text-xs"><AlertTriangle className="w-3 h-3 mr-1" />Eroare</Badge>}
                     <Badge variant="secondary">{g.tip}</Badge>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10 h-7 w-7 p-0" onClick={async () => { try { await api.delete(`/v2/applications/${id}/guide/${g.id}`); load(); } catch(e) { console.error(e); } }} data-testid={`delete-guide-${g.id}`}><X className="w-3.5 h-3.5" /></Button>
                   </div>
                 </div>
                 {g.extracted_content?.rezumat && (
