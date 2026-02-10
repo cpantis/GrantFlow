@@ -12,6 +12,7 @@ from services.funding_service import (
 )
 from services.ai_service import generate_document_section, validate_coherence, check_eligibility
 from services.pdf_service import generate_pdf
+from services.orchestrator_service import run_orchestrator_check
 
 router = APIRouter(prefix="/api/v2", tags=["applications"])
 db = None
