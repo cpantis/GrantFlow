@@ -117,6 +117,62 @@ async def create_application(req: CreateApplicationRequest, current_user: dict =
         measure_code = ""
         program_name = req.custom_program or ""
 
+    # If custom links provided, extract session data from pages
+    extracted_data = {}
+    if req.custom_links:
+        try:
+            import httpx
+            from services.ai_service import chat_navigator
+            scraped_texts = []
+            async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
+                for link in req.custom_links[:3]:  # Max 3 links
+                    try:
+                        resp = await client.get(link, headers={"User-Agent": "GrantFlow/1.0"})
+                        if resp.status_code == 200:
+                            # Extract text content (strip HTML)
+                            import re
+                            text = re.sub(r'<[^>]+>', ' ', resp.text)
+                            text = re.sub(r'\s+', ' ', text).strip()[:5000]
+                            scraped_texts.append(f"[{link}]: {text}")
+                    except Exception as e:
+                        scraped_texts.append(f"[{link}]: Eroare acces - {str(e)[:100]}")
+
+            if scraped_texts:
+                extract_result = await chat_navigator(
+                    "Din textele de mai jos (pagini web despre un program de finanțare), extrage:\n"
+                    "- Numele programului\n- Codul și numele măsurii\n- Numele sesiunii/apelului\n"
+                    "- Data start și end\n- Buget total\n- Valoare min/max proiect\n- Tip beneficiari\n"
+                    "- Orice alte detalii relevante (criterii, documente cerute)\n\n"
+                    + "\n\n".join(scraped_texts),
+                    {}
+                )
+                extracted_data["scraped_info"] = extract_result.get("result", "")
+
+                # Try to fill in missing fields from extraction
+                if not program_name and req.custom_program:
+                    program_name = req.custom_program
+                if not call_name or call_name == "Sesiune custom":
+                    call_name = req.custom_session or "Sesiune din link-uri"
+
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Link extraction failed: {e}")
+
+    initial_status = "call_selected"
+    initial_history = [
+        {"from": None, "to": "draft", "at": datetime.now(timezone.utc).isoformat(), "by": current_user["user_id"], "reason": "Proiect creat"},
+        {"from": "draft", "to": "call_selected", "at": datetime.now(timezone.utc).isoformat(), "by": current_user["user_id"], "reason": f"Sesiune: {call_name}"}
+    ]
+
+    # If we have extracted data from links, auto-advance to guide_ready
+    if extracted_data.get("scraped_info"):
+        initial_status = "guide_ready"
+        initial_history.append({
+            "from": "call_selected", "to": "guide_ready",
+            "at": datetime.now(timezone.utc).isoformat(), "by": "agent_colector",
+            "reason": "Date sesiune extrase automat din link-uri"
+        })
+
     application = {
         "id": app_id, "title": req.title, "description": req.description,
         "company_id": req.company_id, "company_name": org["denumire"], "company_cui": org.get("cui"),
@@ -124,21 +180,36 @@ async def create_application(req: CreateApplicationRequest, current_user: dict =
         "measure_name": measure_name, "measure_code": measure_code,
         "program_name": program_name,
         "custom_links": req.custom_links or [],
-        "status": "call_selected", "status_label": APPLICATION_STATE_LABELS["call_selected"],
-        "history": [
-            {"from": None, "to": "draft", "at": datetime.now(timezone.utc).isoformat(), "by": current_user["user_id"], "reason": "Proiect creat"},
-            {"from": "draft", "to": "call_selected", "at": datetime.now(timezone.utc).isoformat(), "by": current_user["user_id"], "reason": f"Sesiune: {call_name}"}
-        ],
+        "extracted_data": extracted_data,
+        "status": initial_status, "status_label": APPLICATION_STATE_LABELS[initial_status],
+        "history": initial_history,
         "guide_assets": [], "required_documents": [], "checklist_frozen": False,
         "folder_groups": DEFAULT_FOLDER_GROUPS,
         "documents": [], "drafts": [], "procurement": [],
         "budget_estimated": 0, "budget_approved": 0, "expenses_total": 0,
+        "company_context": {
+            "denumire": org.get("denumire"), "cui": org.get("cui"),
+            "forma_juridica": org.get("forma_juridica"), "caen_principal": org.get("caen_principal"),
+            "adresa": org.get("adresa"), "judet": org.get("judet"),
+            "nr_angajati": org.get("nr_angajati"), "data_infiintare": org.get("data_infiintare")
+        },
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "created_by": current_user["user_id"]
     }
     await db.applications.insert_one(application)
-    await db.audit_log.insert_one({"id": str(uuid.uuid4()), "action": "application.created", "entity_type": "application", "entity_id": app_id, "user_id": current_user["user_id"], "details": {"title": req.title, "call": call_name}, "timestamp": datetime.now(timezone.utc).isoformat()})
+
+    # Log agent run for link extraction
+    if extracted_data.get("scraped_info"):
+        await db.agent_runs.insert_one({
+            "id": str(uuid.uuid4()), "agent_id": "colector",
+            "application_id": app_id, "action": "extract_from_links",
+            "input": {"links": req.custom_links},
+            "output": {"extracted": bool(extracted_data.get("scraped_info"))},
+            "timestamp": datetime.now(timezone.utc).isoformat(), "user_id": current_user["user_id"]
+        })
+
+    await db.audit_log.insert_one({"id": str(uuid.uuid4()), "action": "application.created", "entity_type": "application", "entity_id": app_id, "user_id": current_user["user_id"], "details": {"title": req.title, "call": call_name, "links_extracted": bool(extracted_data)}, "timestamp": datetime.now(timezone.utc).isoformat()})
     application.pop("_id", None)
     return application
 
