@@ -72,7 +72,7 @@ export function ProjectWritingPage() {
     if (selectedSesiune) body.sesiune_id = selectedSesiune;
     if (achizitii.length > 0) body.achizitii = achizitii;
     try {
-      const res = await api.post('/funding/project-config', body);
+      const res = await api.put(`/v2/applications/${id}`, body);
       setProject(res.data);
     } catch (e) { console.error(e); }
   };
