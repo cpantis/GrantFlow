@@ -296,6 +296,15 @@ export function DosareDetailPage() {
         {/* CONFIGURARE PROIECT */}
         <TabsContent value="config" className="space-y-4">
           <h2 className="font-heading text-lg font-bold flex items-center gap-2"><Settings className="w-5 h-5 text-primary" />Configurare proiect</h2>
+          {/* Show call info if available */}
+          {(app.call_value_min || app.call_value_max || app.call_budget) && (
+            <Card className="bg-primary/5 border-primary/20"><CardContent className="p-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              {app.program_name && <div><p className="text-muted-foreground text-xs">Program</p><p className="font-bold">{app.program_name}</p></div>}
+              {app.call_budget && <div><p className="text-muted-foreground text-xs">Buget sesiune</p><p className="font-bold">{app.call_budget?.toLocaleString()} RON</p></div>}
+              {app.call_value_min && <div><p className="text-muted-foreground text-xs">Valoare min-max proiect</p><p className="font-bold">{app.call_value_min?.toLocaleString()} – {app.call_value_max?.toLocaleString()} RON</p></div>}
+              {app.call_region && <div><p className="text-muted-foreground text-xs">Regiune</p><p className="font-bold">{app.call_region}</p></div>}
+            </CardContent></Card>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Tip proiect</Label>
@@ -308,8 +317,13 @@ export function DosareDetailPage() {
                 <option value="mixt">Mixt</option>
               </select>
             </div>
+            <div className="space-y-2">
+              <Label>Buget estimat proiect (RON)</Label>
+              <Input type="number" value={config.buget || ''} onChange={(e) => setConfig({...config, buget: e.target.value})} placeholder={app.call_value_max ? `Max: ${app.call_value_max.toLocaleString()} RON` : 'Suma în RON'} data-testid="config-buget" />
+              {app.call_value_min && <p className="text-xs text-muted-foreground">Interval eligibil: {app.call_value_min?.toLocaleString()} – {app.call_value_max?.toLocaleString()} RON</p>}
+            </div>
             <div className="space-y-2"><Label>Județ implementare</Label><Input value={config.judet} onChange={(e) => setConfig({...config, judet: e.target.value})} placeholder="ex: București" data-testid="config-judet" /></div>
-            <div className="space-y-2 md:col-span-2"><Label>Locație implementare (adresă / CF)</Label><Input value={config.locatie} onChange={(e) => setConfig({...config, locatie: e.target.value})} placeholder="Adresă sau nr. Carte Funciară" data-testid="config-locatie" /></div>
+            <div className="space-y-2"><Label>Locație implementare (adresă / CF)</Label><Input value={config.locatie} onChange={(e) => setConfig({...config, locatie: e.target.value})} placeholder="Adresă sau nr. Carte Funciară" data-testid="config-locatie" /></div>
             <div className="space-y-2 md:col-span-2">
               <Label>Tema proiectului (ce se dorește a fi achiziționat)</Label>
               <Textarea value={config.tema} onChange={(e) => setConfig({...config, tema: e.target.value})} rows={3} placeholder="Descrieți obiectivele și ce se va achiziționa prin proiect..." data-testid="config-tema" />
