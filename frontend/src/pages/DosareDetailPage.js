@@ -141,6 +141,7 @@ export function DosareDetailPage() {
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="bg-muted flex-wrap h-auto py-1">
           <TabsTrigger value="overview">Sumar</TabsTrigger>
+          <TabsTrigger value="orchestrator"><Zap className="w-4 h-4 mr-1" />Orchestrator</TabsTrigger>
           <TabsTrigger value="guide"><BookOpen className="w-4 h-4 mr-1" />Ghid & Anexe</TabsTrigger>
           <TabsTrigger value="checklist"><CheckCircle className="w-4 h-4 mr-1" />Checklist</TabsTrigger>
           <TabsTrigger value="documents"><FolderOpen className="w-4 h-4 mr-1" />Documente</TabsTrigger>
