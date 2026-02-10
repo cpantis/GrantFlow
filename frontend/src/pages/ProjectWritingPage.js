@@ -98,7 +98,7 @@ export function ProjectWritingPage() {
   const generateDraft = async (templateId) => {
     setGenerating(templateId);
     try {
-      const res = await api.post('/funding/generate-draft', { project_id: id, template_id: templateId });
+      const res = await api.post(`/v2/applications/${id}/drafts/generate`, { template_id: templateId });
       setDrafts([...drafts, res.data]);
     } catch (e) { console.error(e); }
     setGenerating(null);
