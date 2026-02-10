@@ -226,6 +226,27 @@ async def get_application(app_id: str, current_user: dict = Depends(get_current_
     if not app: raise HTTPException(404, "Dosar negăsit")
     return app
 
+@router.put("/applications/{app_id}")
+async def update_application(app_id: str, updates: dict, current_user: dict = Depends(get_current_user)):
+    """Update application config fields."""
+    allowed = ["tip_proiect", "locatie_implementare", "judet_implementare", "tema_proiect", "achizitii", "budget_estimated", "description"]
+    data = {k: v for k, v in updates.items() if k in allowed}
+    data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await db.applications.update_one({"id": app_id}, {"$set": data})
+    app = await db.applications.find_one({"id": app_id}, {"_id": 0})
+    return app
+
+class CustomTemplateRequest(BaseModel):
+    label: str
+    sections: List[str]
+
+@router.post("/applications/{app_id}/custom-template")
+async def add_custom_template(app_id: str, req: CustomTemplateRequest, current_user: dict = Depends(get_current_user)):
+    """User creates a custom draft template for this application."""
+    tpl = {"id": f"custom_{uuid.uuid4().hex[:8]}", "label": req.label, "category": "custom", "sections": req.sections, "created_by": current_user["user_id"], "created_at": datetime.now(timezone.utc).isoformat()}
+    await db.applications.update_one({"id": app_id}, {"$push": {"custom_templates": tpl}})
+    return tpl
+
 @router.post("/applications/{app_id}/transition")
 async def transition_application(app_id: str, req: TransitionRequest, current_user: dict = Depends(get_current_user)):
     app = await db.applications.find_one({"id": app_id}, {"_id": 0})
