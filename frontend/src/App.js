@@ -17,6 +17,8 @@ import { AgentsPage } from '@/pages/AgentsPage';
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
 import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
 import { ProjectWritingPage } from '@/pages/ProjectWritingPage';
+import { DosarePage } from '@/pages/DosarePage';
+import { DosareDetailPage } from '@/pages/DosareDetailPage';
 import '@/App.css';
 
 function ProtectedRoute({ children }) {
