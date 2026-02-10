@@ -115,7 +115,8 @@ async def run_orchestrator_check(app: dict, org: dict, db, user_id: str = None) 
         icon = "OK" if c["status"] == "ok" else "ACȚIUNE" if c["status"] == "actiune_necesara" else "ATENȚIE"
         prompt += f"- **{c['agent']}**: {icon} {', '.join(c['issues']) if c['issues'] else 'în regulă'}\n"
     prompt += f"\nGhid: {len(guide_assets)} fișiere | Documente: {len(docs)}/{len(req_docs)} | Drafturi: {len(drafts)}\n"
-    prompt += "\nOferă raport cu prioritizare și pași concreți."
+    prompt += rules_section
+    prompt += "\nOferă raport cu prioritizare și pași concreți. Menționează regulile custom relevante."
 
     try:
         ai_response = await chat.send_message(UserMessage(text=prompt))
