@@ -436,21 +436,56 @@ export function DosareDetailPage() {
         </TabsContent>
 
         <TabsContent value="drafts" className="space-y-4">
-          <h2 className="font-heading text-lg font-bold">Generare documente (Redactor AI)</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-heading text-lg font-bold">Generare documente (Redactor AI)</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">Selectează un template standard sau creează unul propriu. AI-ul completează pe baza datelor firmei și proiectului.</p>
+
+          {/* Standard templates */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {templates.map(t => (
-              <Card key={t.id} className="bg-card border-border hover:border-primary/30 transition-colors"><CardContent className="p-5 space-y-3">
-                <div className="flex items-center gap-2"><FileText className="w-5 h-5 text-primary" /><p className="font-semibold">{t.label}</p></div>
+              <Card key={t.id} className="bg-card border-border hover:border-primary/30 transition-colors"><CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2"><FileText className="w-4 h-4 text-primary" /><p className="font-semibold text-sm">{t.label}</p></div>
+                <p className="text-xs text-muted-foreground">{t.sections?.slice(0, 3).join(', ')}{t.sections?.length > 3 ? ` +${t.sections.length - 3}` : ''}</p>
                 <Button size="sm" className="w-full" onClick={() => generateDraft(t.id)} disabled={generating === t.id} data-testid={`gen-${t.id}`}>
-                  {generating === t.id ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Se generează...</> : <><Bot className="w-4 h-4 mr-2" />Generează PDF</>}
+                  {generating === t.id ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Se generează...</> : <><Bot className="w-4 h-4 mr-2" />Generează</>}
+                </Button>
+              </CardContent></Card>
+            ))}
+            {/* Custom templates from this application */}
+            {(app.custom_templates || []).map(t => (
+              <Card key={t.id} className="bg-card border-primary/20 hover:border-primary/40 transition-colors"><CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2"><FileText className="w-4 h-4 text-amber-500" /><p className="font-semibold text-sm">{t.label}</p><Badge className="text-xs bg-amber-50 text-amber-600">Custom</Badge></div>
+                <p className="text-xs text-muted-foreground">{t.sections?.join(', ')}</p>
+                <Button size="sm" className="w-full" onClick={() => generateDraft(t.id)} disabled={generating === t.id}>
+                  {generating === t.id ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Se generează...</> : <><Bot className="w-4 h-4 mr-2" />Generează</>}
                 </Button>
               </CardContent></Card>
             ))}
           </div>
+
+          {/* Add custom template */}
+          <Card className="bg-secondary/20 border-dashed border-2 border-border"><CardContent className="p-4 space-y-3">
+            <p className="font-semibold text-sm flex items-center gap-2"><Plus className="w-4 h-4" />Adaugă template propriu</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1"><Label className="text-xs">Titlu template</Label><Input value={customTemplate.label} onChange={(e) => setCustomTemplate({...customTemplate, label: e.target.value})} placeholder="ex: Declarație pe proprie răspundere" data-testid="custom-tpl-label" /></div>
+              <div className="space-y-1"><Label className="text-xs">Secțiuni (separate prin virgulă)</Label><Input value={customTemplate.sections} onChange={(e) => setCustomTemplate({...customTemplate, sections: e.target.value})} placeholder="Identificare, Conținut, Semnătură" data-testid="custom-tpl-sections" /></div>
+            </div>
+            <Button size="sm" variant="outline" disabled={!customTemplate.label} onClick={async () => {
+              try {
+                await api.post(`/v2/applications/${id}/custom-template`, { label: customTemplate.label, sections: customTemplate.sections.split(',').map(s => s.trim()).filter(Boolean) });
+                setCustomTemplate({ label: '', sections: '' });
+                load();
+              } catch (e) { console.error(e); }
+            }} data-testid="add-custom-tpl-btn"><Plus className="w-4 h-4 mr-1" />Adaugă template</Button>
+          </CardContent></Card>
+
+          {/* Generated drafts */}
           {drafts.length > 0 && <div className="space-y-3 mt-4">
-            <h3 className="font-heading text-base font-bold">Generate ({drafts.length})</h3>
-            {drafts.map(d => (
+            <h3 className="font-heading text-base font-bold">Documente generate ({drafts.length})</h3>
+            {drafts.map((d, idx) => (
               <Card key={d.id} className="bg-card border-border"><CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2">
+                <span className="text-sm font-mono text-muted-foreground w-6">{String(idx + 1).padStart(2, '0')}.</span>
                 <CheckCircle className="w-4 h-4 text-green-500" />{d.template_label}
                 {d.pdf_url && <a href={`${process.env.REACT_APP_BACKEND_URL}${d.pdf_url}`} target="_blank" rel="noopener noreferrer" className="ml-auto"><Button size="sm" variant="outline"><Download className="w-3 h-3 mr-1" />PDF</Button></a>}
               </CardTitle></CardHeader>
@@ -460,9 +495,13 @@ export function DosareDetailPage() {
         </TabsContent>
 
         <TabsContent value="validation" className="space-y-4">
-          <div className="flex gap-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-heading text-lg font-bold flex items-center gap-2"><Shield className="w-5 h-5 text-primary" />Evaluare & Grilă Conformitate</h2>
+              <p className="text-muted-foreground text-sm">Agentul Evaluator verifică dosarul conform grilei de conformitate</p>
+            </div>
             <Button onClick={validate} disabled={validating} data-testid="validate-btn">
-              {validating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Se validează...</> : <><Shield className="w-4 h-4 mr-2" />Validare dosar</>}
+              {validating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Se evaluează...</> : <><Shield className="w-4 h-4 mr-2" />Evaluare conformitate</>}
             </Button>
           </div>
           {validationReport?.type === 'validation' && (
