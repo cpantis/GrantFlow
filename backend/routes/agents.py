@@ -265,7 +265,7 @@ async def run_agent(agent_id: str, req: RunAgentRequest, current_user: dict = De
         pdf_file = generate_pdf(tpl["label"], content, full_ctx.get("firma", {}).get("denumire", ""), app["title"])
         draft = {"id": str(uuid.uuid4()), "template_id": template_id, "template_label": tpl["label"], "content": content, "pdf_filename": pdf_file, "status": "draft", "version": 1, "created_at": datetime.now(timezone.utc).isoformat(), "created_by": current_user["user_id"], "applied_rules": rules}
         await db.applications.update_one({"id": req.application_id}, {"$push": {"drafts": draft}})
-        result = {"draft_id": draft["id"], "pdf_url": f"/api/funding/drafts/download/{pdf_file}", "preview": content[:300]}
+        result = {"draft_id": draft["id"], "pdf_url": f"/api/v2/drafts/download/{pdf_file}", "preview": content[:300]}
 
     # --- VALIDATOR ---
     elif agent_id == "validator":
