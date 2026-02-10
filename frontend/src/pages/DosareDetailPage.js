@@ -30,6 +30,17 @@ export function DosareDetailPage() {
   const [newReqDoc, setNewReqDoc] = useState({ official_name: '', folder_group: 'depunere', required: true });
   const [orchestratorReport, setOrchestratorReport] = useState(null);
   const [orchestratorLoading, setOrchestratorLoading] = useState(false);
+  const [config, setConfig] = useState({ tip_proiect: '', locatie: '', judet: '', tema: '' });
+  const [achizitiiSearch, setAchizitiiSearch] = useState('');
+  const [sicapResults, setSicapResults] = useState([]);
+  const [afirResults, setAfirResults] = useState([]);
+  const [achizitii, setAchizitii] = useState([]);
+  const [preeligReport, setPreeligReport] = useState(null);
+  const [preeligLoading, setPreeligLoading] = useState(false);
+  const [customTemplate, setCustomTemplate] = useState({ label: '', sections: '' });
+  const [chatMsg, setChatMsg] = useState('');
+  const [chatHistory, setChatHistory] = useState([]);
+  const [chatLoading, setChatLoading] = useState(false);
 
   const load = async () => {
     try {
