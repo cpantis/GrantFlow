@@ -313,19 +313,109 @@ async def freeze_checklist(app_id: str, current_user: dict = Depends(get_current
 
 # --- Documents in folders ---
 @router.post("/applications/{app_id}/documents")
-async def upload_app_document(app_id: str, file: UploadFile = File(...), folder_group: str = Form("depunere"), required_doc_id: Optional[str] = Form(None), current_user: dict = Depends(get_current_user)):
+async def upload_app_document(app_id: str, file: UploadFile = File(...), folder_group: str = Form("depunere"), required_doc_id: Optional[str] = Form(None), tip_document: Optional[str] = Form(None), current_user: dict = Depends(get_current_user)):
     upload_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "app_docs")
     os.makedirs(upload_dir, exist_ok=True)
     did = str(uuid.uuid4())
     ext = os.path.splitext(file.filename)[1] if file.filename else ""
     safe = f"{did}{ext}"
     content = await file.read()
-    with open(os.path.join(upload_dir, safe), "wb") as f: f.write(content)
-    doc = {"id": did, "filename": file.filename, "stored_name": safe, "file_size": len(content), "content_type": file.content_type, "folder_group": folder_group, "required_doc_id": required_doc_id, "status": "uploaded", "uploaded_at": datetime.now(timezone.utc).isoformat(), "uploaded_by": current_user["user_id"]}
+    filepath = os.path.join(upload_dir, safe)
+    with open(filepath, "wb") as f: f.write(content)
+
+    # Auto-detect document type from filename
+    fname_lower = (file.filename or "").lower()
+    if not tip_document:
+        if any(k in fname_lower for k in ["factur", "invoice"]): tip_document = "factura"
+        elif any(k in fname_lower for k in ["bilant", "balant", "balance"]): tip_document = "bilant"
+        elif any(k in fname_lower for k in ["contract"]): tip_document = "contract"
+        elif any(k in fname_lower for k in ["ci", "buletin", "carte_identitate"]): tip_document = "ci"
+        elif any(k in fname_lower for k in ["certificat", "onrc"]): tip_document = "certificat"
+        elif any(k in fname_lower for k in ["declarati"]): tip_document = "declaratie"
+        elif any(k in fname_lower for k in ["ofert"]): tip_document = "oferta"
+        elif any(k in fname_lower for k in ["cv", "curriculum"]): tip_document = "cv"
+        else: tip_document = "altele"
+
+    doc = {
+        "id": did, "filename": file.filename, "stored_name": safe,
+        "file_size": len(content), "content_type": file.content_type,
+        "folder_group": folder_group, "required_doc_id": required_doc_id,
+        "tip_document": tip_document,
+        "status": "uploaded", "ocr_status": "processing",
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "uploaded_by": current_user["user_id"]
+    }
     await db.applications.update_one({"id": app_id}, {"$push": {"documents": doc}})
+
     # Update required doc status
     if required_doc_id:
-        await db.applications.update_one({"id": app_id, "required_documents.id": required_doc_id}, {"$set": {"required_documents.$.status": "uploaded"}})
+        await db.applications.update_one(
+            {"id": app_id, "required_documents.id": required_doc_id},
+            {"$set": {"required_documents.$.status": "uploaded"}}
+        )
+
+    # Run OCR automatically
+    ocr_actions = []
+    try:
+        from services.ocr_service import process_ocr
+        ocr_result = await process_ocr(did, tip_document, file.filename, db, file_path=filepath)
+        doc["ocr_status"] = ocr_result.get("status", "pending")
+        doc["ocr_data"] = ocr_result
+        ocr_actions.append(f"OCR executat: {ocr_result.get('status')} (încredere: {ocr_result.get('overall_confidence', 0):.0%})")
+
+        # Update doc with OCR results
+        await db.applications.update_one(
+            {"id": app_id, "documents.id": did},
+            {"$set": {
+                "documents.$.ocr_status": ocr_result.get("status"),
+                "documents.$.ocr_data": ocr_result
+            }}
+        )
+
+        # Extract and apply data based on document type
+        fields = ocr_result.get("extracted_fields", {})
+        app = await db.applications.find_one({"id": app_id}, {"_id": 0})
+
+        if fields and tip_document == "factura":
+            try:
+                total = float(str(fields.get("total", "0")).replace(",", ".").replace(" ", ""))
+                if total > 0:
+                    await db.applications.update_one({"id": app_id}, {"$inc": {"expenses_total": total}})
+                    ocr_actions.append(f"Cheltuială detectată: {total} RON (factură {fields.get('numar_factura', 'N/A')})")
+            except (ValueError, TypeError):
+                pass
+
+        if fields and tip_document == "bilant" and app:
+            company_id = app.get("company_id")
+            if company_id:
+                await db.organizations.update_one({"id": company_id}, {
+                    "$set": {"date_financiare_ocr": fields, "updated_at": datetime.now(timezone.utc).isoformat()}
+                })
+                ocr_actions.append("Date financiare extrase și salvate la firmă")
+
+        if fields and tip_document == "contract":
+            ocr_actions.append(f"Contract detectat: {fields.get('numar_contract', 'N/A')} din {fields.get('data_contract', 'N/A')}")
+
+        if fields and tip_document in ["ci", "certificat"]:
+            ocr_actions.append(f"Document identitate/ONRC procesat: {len(fields)} câmpuri extrase")
+
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"OCR failed for {did}: {e}")
+        doc["ocr_status"] = "error"
+        ocr_actions.append(f"OCR eroare: {str(e)[:100]}")
+
+    # Log agent run
+    await db.agent_runs.insert_one({
+        "id": str(uuid.uuid4()), "agent_id": "parser",
+        "application_id": app_id, "action": "ocr_document",
+        "input": {"filename": file.filename, "tip": tip_document, "folder": folder_group},
+        "output": {"ocr_status": doc.get("ocr_status"), "actions": ocr_actions},
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "user_id": current_user["user_id"]
+    })
+
+    doc["ocr_actions"] = ocr_actions
     return doc
 
 # --- Drafts ---
