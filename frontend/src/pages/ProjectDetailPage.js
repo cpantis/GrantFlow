@@ -331,7 +331,7 @@ export function ProjectDetailPage() {
                   fd.append('file', e.target.files[0]);
                   fd.append('project_id', id);
                   fd.append('titlu', title);
-                  const res = await api.post('/funding/generate-from-upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                  const res = await api.post(`/v2/applications/${id}/drafts/generate`, { template_id: 'custom_upload' });
                   setDrafts(prev => [...prev, res.data]);
                 } catch (err) { console.error(err); }
                 setGenerating(null);
