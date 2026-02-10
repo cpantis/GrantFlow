@@ -168,10 +168,7 @@ async def process_ocr(doc_id: str, doc_type: str, filename: str, db, file_path: 
     content_type = ct_map.get(ext)
 
     # Select prompt based on doc type
-    if doc_type in ["ci", "buletin"]:
-        prompt = CI_PROMPT
-    else:
-        prompt = ONRC_PROMPT
+    prompt = PROMPT_MAP.get(doc_type, GENERIC_PROMPT)
 
     try:
         chat = _get_vision_chat("Ești un expert OCR specializat pe documente oficiale românești. Extragi date structurate din imagini/PDF-uri.")
