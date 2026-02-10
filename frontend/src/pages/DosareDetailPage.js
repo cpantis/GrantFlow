@@ -142,11 +142,14 @@ export function DosareDetailPage() {
         <TabsList className="bg-muted flex-wrap h-auto py-1">
           <TabsTrigger value="overview">Sumar</TabsTrigger>
           <TabsTrigger value="orchestrator"><Zap className="w-4 h-4 mr-1" />Orchestrator</TabsTrigger>
-          <TabsTrigger value="guide"><BookOpen className="w-4 h-4 mr-1" />Ghid & Anexe</TabsTrigger>
+          <TabsTrigger value="guide"><BookOpen className="w-4 h-4 mr-1" />Legislație</TabsTrigger>
+          <TabsTrigger value="config"><Settings className="w-4 h-4 mr-1" />Configurare</TabsTrigger>
+          <TabsTrigger value="preeligibility"><Shield className="w-4 h-4 mr-1" />Pre-eligibilitate</TabsTrigger>
+          <TabsTrigger value="achizitii"><ShoppingCart className="w-4 h-4 mr-1" />Achiziții</TabsTrigger>
           <TabsTrigger value="checklist"><CheckCircle className="w-4 h-4 mr-1" />Checklist</TabsTrigger>
           <TabsTrigger value="documents"><FolderOpen className="w-4 h-4 mr-1" />Documente</TabsTrigger>
           <TabsTrigger value="drafts"><PenTool className="w-4 h-4 mr-1" />Drafturi</TabsTrigger>
-          <TabsTrigger value="validation"><Shield className="w-4 h-4 mr-1" />Validare</TabsTrigger>
+          <TabsTrigger value="validation"><Shield className="w-4 h-4 mr-1" />Evaluare</TabsTrigger>
           <TabsTrigger value="history">Istoric</TabsTrigger>
         </TabsList>
 
