@@ -142,3 +142,209 @@ async def set_rules(agent_id: str, req: UpdateAgentRules, current_user: dict = D
     user_id = current_user["user_id"]
     await db.agent_rules.update_one({"agent_id": agent_id, "user_id": user_id}, {"$set": {"reguli": req.reguli, "updated_at": datetime.now(timezone.utc).isoformat()}}, upsert=True)
     return {"message": "Reguli actualizate"}
+
+
+# === Unified Agent Execution Endpoint ===
+
+class RunAgentRequest(BaseModel):
+    application_id: Optional[str] = None
+    company_id: Optional[str] = None
+    input_data: Optional[dict] = {}
+
+@router.post("/{agent_id}/run")
+async def run_agent(agent_id: str, req: RunAgentRequest, current_user: dict = Depends(get_current_user)):
+    """Unified endpoint to run any agent independently."""
+    agent = next((a for a in DEFAULT_AGENTS if a["id"] == agent_id), None)
+    if not agent:
+        raise HTTPException(404, "Agent negăsit")
+
+    # Load custom rules
+    custom_rules = await db.agent_rules.find_one({"agent_id": agent_id, "user_id": current_user["user_id"]}, {"_id": 0})
+    rules = (agent.get("reguli_default", []) + (custom_rules.get("reguli", []) if custom_rules else []))
+    rules_text = "\n".join(rules)
+
+    # Load context
+    app = None
+    org = None
+    if req.application_id:
+        app = await db.applications.find_one({"id": req.application_id}, {"_id": 0})
+        if app:
+            org = await db.organizations.find_one({"id": app.get("company_id")}, {"_id": 0})
+    if req.company_id and not org:
+        org = await db.organizations.find_one({"id": req.company_id}, {"_id": 0})
+
+    run_id = str(uuid.uuid4())
+    result = {}
+
+    # --- COLECTOR ---
+    if agent_id == "colector":
+        if not org:
+            raise HTTPException(400, "Firma este necesară pentru agentul Colector")
+        from services.onrc_service import lookup_cui
+        from services.anaf_service import get_financial_data
+        actions = []
+        # Refresh ONRC data
+        if org.get("cui"):
+            onrc = await lookup_cui(org["cui"])
+            if onrc.get("success"):
+                update_fields = {}
+                for k in ["denumire", "adresa", "judet", "stare", "telefon", "nr_reg_com", "data_infiintare"]:
+                    if onrc["data"].get(k):
+                        update_fields[k] = onrc["data"][k]
+                if update_fields:
+                    update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
+                    await db.organizations.update_one({"id": org["id"]}, {"$set": update_fields})
+                    actions.append(f"Date ONRC actualizate: {', '.join(update_fields.keys())}")
+            # Financial data
+            fin = await get_financial_data(org["cui"])
+            if fin.get("success"):
+                await db.organizations.update_one({"id": org["id"]}, {"$set": {"date_financiare": fin["data"], "updated_at": datetime.now(timezone.utc).isoformat()}})
+                actions.append(f"Date financiare ANAF actualizate (CA: {fin['data'].get('cifra_afaceri', 'N/A')})")
+        result = {"actions": actions, "company": org.get("denumire")}
+
+    # --- PARSER OCR ---
+    elif agent_id == "parser":
+        doc_id = req.input_data.get("document_id")
+        if not doc_id:
+            raise HTTPException(400, "document_id necesar")
+        from services.ocr_service import process_ocr
+        import os
+        # Find file
+        base_dirs = [os.path.join(os.path.dirname(os.path.dirname(__file__)), d) for d in ["uploads/app_docs", "uploads/onrc", "uploads"]]
+        file_path = None
+        for bd in base_dirs:
+            if not os.path.exists(bd): continue
+            for f in os.listdir(bd):
+                if doc_id in f:
+                    file_path = os.path.join(bd, f)
+                    break
+            if file_path: break
+        tip = req.input_data.get("tip_document", "altele")
+        ocr = await process_ocr(doc_id, tip, req.input_data.get("filename", ""), db, file_path=file_path)
+        result = {"ocr_status": ocr.get("status"), "fields_count": len(ocr.get("extracted_fields", {})), "confidence": ocr.get("overall_confidence")}
+
+    # --- ELIGIBILITATE ---
+    elif agent_id == "eligibilitate":
+        if not app or not org:
+            raise HTTPException(400, "application_id și firmă necesare")
+        from services.ai_service import check_eligibility
+        from services.funding_service import get_call
+        call = get_call(app.get("call_id", ""))
+        firm_data = {k: org.get(k) for k in ["denumire", "cui", "forma_juridica", "caen_principal", "caen_secundare", "nr_angajati", "data_infiintare", "stare", "judet", "capital_social"]}
+        firm_data["date_financiare"] = org.get("date_financiare") or org.get("date_financiare_ocr")
+        program_info = {
+            "program": app.get("program_name"), "sesiune": app.get("call_name"), "buget_estimat": app.get("budget_estimated"),
+            "tip_proiect": app.get("tip_proiect"), "tema": app.get("tema_proiect") or app.get("description"),
+        }
+        if call:
+            program_info.update({"buget_sesiune": call.get("budget"), "valoare_min": call.get("value_min"), "valoare_max": call.get("value_max"), "beneficiari": call.get("beneficiaries"), "regiune": call.get("region")})
+        program_info["reguli_agent"] = rules_text
+        ai_result = await check_eligibility(firm_data, program_info)
+        report = {"id": str(uuid.uuid4()), "type": "evaluation", "application_id": req.application_id, "result": ai_result.get("result", ""), "created_at": datetime.now(timezone.utc).isoformat()}
+        await db.compliance_reports.insert_one(report)
+        result = {"report_id": report["id"], "success": ai_result.get("success"), "preview": ai_result.get("result", "")[:300]}
+
+    # --- REDACTOR ---
+    elif agent_id == "redactor":
+        if not app:
+            raise HTTPException(400, "application_id necesar")
+        template_id = req.input_data.get("template_id")
+        if not template_id:
+            raise HTTPException(400, "template_id necesar")
+        from services.ai_service import generate_document_section
+        from services.funding_service import get_template
+        from services.pdf_service import generate_pdf
+        tpl = get_template(template_id)
+        if not tpl:
+            custom_tpls = app.get("custom_templates", [])
+            tpl = next((t for t in custom_tpls if t["id"] == template_id), None)
+        if not tpl:
+            raise HTTPException(404, "Template negăsit")
+        company_ctx = app.get("company_context") or {k: (org or {}).get(k) for k in ["denumire", "cui", "adresa", "judet", "forma_juridica"]}
+        data = {"dosar": {"title": app["title"], "call": app.get("call_name"), "program": app.get("program_name"), "budget": app.get("budget_estimated")}, "firma": company_ctx}
+        ai_result = await generate_document_section(template=f"{tpl['label']}: {', '.join(tpl.get('sections', []))}\n{rules_text}", data=data, section=req.input_data.get("section") or ", ".join(tpl.get("sections", [])))
+        content = ai_result.get("result", "")
+        import os
+        pdf_file = generate_pdf(tpl["label"], content, (org or {}).get("denumire", ""), app["title"])
+        draft = {"id": str(uuid.uuid4()), "template_id": template_id, "template_label": tpl["label"], "content": content, "pdf_filename": pdf_file, "status": "draft", "version": 1, "created_at": datetime.now(timezone.utc).isoformat(), "created_by": current_user["user_id"], "applied_rules": rules}
+        await db.applications.update_one({"id": req.application_id}, {"$push": {"drafts": draft}})
+        result = {"draft_id": draft["id"], "pdf_url": f"/api/funding/drafts/download/{pdf_file}", "preview": content[:300]}
+
+    # --- VALIDATOR ---
+    elif agent_id == "validator":
+        if not app:
+            raise HTTPException(400, "application_id necesar")
+        from services.ai_service import validate_coherence
+        docs = app.get("documents", [])
+        req_docs = app.get("required_documents", [])
+        ai_result = await validate_coherence(
+            documents=[{"filename": d.get("filename"), "folder": d.get("folder_group"), "status": d.get("status"), "ocr": d.get("ocr_status")} for d in docs],
+            project_data={"title": app["title"], "program": app.get("program_name"), "firma": (org or {}).get("denumire"), "buget": app.get("budget_estimated"), "docs_uploaded": len(docs), "docs_required": len(req_docs), "docs_missing": len([r for r in req_docs if r.get("status") == "missing"]), "reguli_agent": rules_text}
+        )
+        report = {"id": str(uuid.uuid4()), "type": "validation", "application_id": req.application_id, "result": ai_result.get("result", ""), "created_at": datetime.now(timezone.utc).isoformat()}
+        await db.compliance_reports.insert_one(report)
+        result = {"report_id": report["id"], "preview": ai_result.get("result", "")[:300]}
+
+    # --- EVALUATOR (grilă conformitate) ---
+    elif agent_id == "evaluator":
+        if not app:
+            raise HTTPException(400, "application_id necesar")
+        from services.ai_service import validate_coherence
+        docs = app.get("documents", [])
+        req_docs = app.get("required_documents", [])
+        drafts = app.get("drafts", [])
+        guides = [g.get("filename") for g in app.get("guide_assets", [])]
+        ai_result = await validate_coherence(
+            documents=[{"name": r.get("official_name"), "status": r.get("status"), "required": r.get("required")} for r in req_docs],
+            project_data={"title": app["title"], "program": app.get("program_name"), "buget": app.get("budget_estimated"),
+                          "tip_proiect": app.get("tip_proiect"), "ghiduri": guides, "drafturi": len(drafts), "documente": len(docs),
+                          "checklist_frozen": app.get("checklist_frozen"), "instrucțiune": "Evaluează conform GRILEI DE CONFORMITATE: verifică completitudinea dosarului, documente obligatorii, coerență date, semnături, conformitate cu ghidul.",
+                          "reguli_agent": rules_text}
+        )
+        report = {"id": str(uuid.uuid4()), "type": "conformity_grid", "application_id": req.application_id, "result": ai_result.get("result", ""), "created_at": datetime.now(timezone.utc).isoformat()}
+        await db.compliance_reports.insert_one(report)
+        result = {"report_id": report["id"], "preview": ai_result.get("result", "")[:300]}
+
+    # --- NAVIGATOR ---
+    elif agent_id == "navigator":
+        message = req.input_data.get("message", "")
+        if not message:
+            raise HTTPException(400, "message necesar")
+        from services.ai_service import chat_navigator
+        context = {}
+        if app:
+            context = {"title": app.get("title"), "status": app.get("status"), "program": app.get("program_name"), "call": app.get("call_name"), "buget": app.get("budget_estimated")}
+        ai_result = await chat_navigator(f"{message}\n\nReguli: {rules_text}" if rules_text else message, context)
+        result = {"response": ai_result.get("result", ""), "success": ai_result.get("success")}
+
+    # --- ORCHESTRATOR ---
+    elif agent_id == "orchestrator":
+        if not app or not org:
+            raise HTTPException(400, "application_id necesar")
+        from services.orchestrator_service import run_orchestrator_check
+        result = await run_orchestrator_check(app, org, db)
+
+    else:
+        raise HTTPException(400, f"Agent {agent_id} nu are implementare de execuție")
+
+    # Log AgentRun
+    await db.agent_runs.insert_one({
+        "id": run_id, "agent_id": agent_id,
+        "application_id": req.application_id, "company_id": req.company_id,
+        "action": "run", "applied_rules": rules,
+        "input": req.input_data or {},
+        "output": {k: str(v)[:500] if isinstance(v, str) else v for k, v in result.items()},
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "user_id": current_user["user_id"]
+    })
+
+    return {"agent_id": agent_id, "run_id": run_id, "applied_rules": rules, "result": result}
+
+@router.get("/{agent_id}/runs")
+async def get_agent_runs(agent_id: str, application_id: Optional[str] = None, limit: int = 20, current_user: dict = Depends(get_current_user)):
+    """Get execution history for an agent."""
+    q = {"agent_id": agent_id}
+    if application_id:
+        q["application_id"] = application_id
+    runs = await db.agent_runs.find(q, {"_id": 0}).sort("timestamp", -1).to_list(limit)
+    return runs
