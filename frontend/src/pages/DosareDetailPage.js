@@ -51,7 +51,7 @@ export function DosareDetailPage() {
       setTemplates(tRes.data || []);
       // Init config from app data
       if (a) {
-        setConfig({ tip_proiect: a.tip_proiect || '', locatie: a.locatie_implementare || '', judet: a.judet_implementare || '', tema: a.tema_proiect || '' });
+        setConfig({ tip_proiect: a.tip_proiect || '', locatie: a.locatie_implementare || '', judet: a.judet_implementare || '', tema: a.tema_proiect || '', buget: a.budget_estimated || '' });
         setAchizitii(a.achizitii || []);
       }
     } catch (e) { console.error(e); }
