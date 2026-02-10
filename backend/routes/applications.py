@@ -638,47 +638,12 @@ async def list_drafts(app_id: str, current_user: dict = Depends(get_current_user
 # --- Validation & Evaluation ---
 @router.post("/applications/{app_id}/validate")
 async def validate_application(app_id: str, current_user: dict = Depends(get_current_user)):
-    app = await db.applications.find_one({"id": app_id}, {"_id": 0})
-    if not app: raise HTTPException(404)
-    org = await db.organizations.find_one({"id": app.get("company_id")}, {"_id": 0})
-    req_docs = app.get("required_documents", [])
-    uploaded_docs = app.get("documents", [])
-    drafts = app.get("drafts", [])
-    guide_files = [g.get("filename") for g in app.get("guide_assets", [])]
-
+    from services.context_builder import build_full_context
+    full_ctx = await build_full_context(app_id, db)
+    if not full_ctx: raise HTTPException(404)
     custom_rules = await db.agent_rules.find_one({"agent_id": "validator", "user_id": current_user["user_id"]}, {"_id": 0})
     extra = "\n".join(custom_rules.get("reguli", [])) if custom_rules else ""
-
-    # Build comprehensive doc list with OCR status
-    doc_details = []
-    for d in uploaded_docs:
-        detail = {"filename": d.get("filename"), "folder": d.get("folder_group"), "status": d.get("status"), "tip": d.get("tip_document"), "ocr_status": d.get("ocr_status")}
-        if d.get("ocr_data", {}).get("extracted_fields"):
-            detail["ocr_fields"] = list(d["ocr_data"]["extracted_fields"].keys())
-        doc_details.append(detail)
-
-    result = await validate_coherence(
-        documents=doc_details + [{"name": d.get("official_name"), "status": d.get("status"), "required": d.get("required"), "type": "checklist_item"} for d in req_docs],
-        project_data={
-            "title": app["title"],
-            "program": app.get("program_name"),
-            "sesiune": app.get("call_name"),
-            "firma": (org or {}).get("denumire"),
-            "cui": (org or {}).get("cui"),
-            "tip_proiect": app.get("tip_proiect"),
-            "tema": app.get("tema_proiect") or app.get("description"),
-            "buget": app.get("budget_estimated"),
-            "achizitii": len(app.get("achizitii", [])),
-            "documente_incarcate": len(uploaded_docs),
-            "documente_cerute": len(req_docs),
-            "documente_lipsa": len([r for r in req_docs if r.get("status") == "missing"]),
-            "drafturi_generate": len(drafts),
-            "ghiduri": guide_files,
-            "locatie": app.get("locatie_implementare"),
-            "date_extrase": app.get("extracted_data", {}).get("scraped_info", "")[:1000],
-            "reguli_custom": extra
-        }
-    )
+    result = await validate_coherence([], {}, full_context=full_ctx, extra_rules=extra)
     report = {"id": str(uuid.uuid4()), "type": "validation", "application_id": app_id, "result": result.get("result", ""), "created_at": datetime.now(timezone.utc).isoformat()}
     await db.compliance_reports.insert_one(report)
     await db.agent_runs.insert_one({"id": str(uuid.uuid4()), "agent_id": "validator", "application_id": app_id, "action": "validate", "applied_rules": (custom_rules.get("reguli", []) if custom_rules else []), "timestamp": datetime.now(timezone.utc).isoformat(), "user_id": current_user["user_id"]})
@@ -687,84 +652,15 @@ async def validate_application(app_id: str, current_user: dict = Depends(get_cur
 
 @router.post("/applications/{app_id}/evaluate")
 async def evaluate_application(app_id: str, current_user: dict = Depends(get_current_user)):
-    app = await db.applications.find_one({"id": app_id}, {"_id": 0})
-    if not app: raise HTTPException(404)
-    org = await db.organizations.find_one({"id": app.get("company_id")}, {"_id": 0})
-
-    # Build complete firm data
-    firm_data = {}
-    if org:
-        firm_data = {
-            "denumire": org.get("denumire"),
-            "cui": org.get("cui"),
-            "forma_juridica": org.get("forma_juridica"),
-            "caen_principal": org.get("caen_principal"),
-            "caen_secundare": org.get("caen_secundare", []),
-            "nr_angajati": org.get("nr_angajati"),
-            "data_infiintare": org.get("data_infiintare"),
-            "stare": org.get("stare"),
-            "judet": org.get("judet"),
-            "adresa": org.get("adresa"),
-            "capital_social": org.get("capital_social"),
-            "date_financiare": org.get("date_financiare") or org.get("date_financiare_ocr"),
-        }
-
-    # Build complete program/call info
-    call = get_call(app.get("call_id", ""))
-    guide_files = [g.get("filename") for g in app.get("guide_assets", [])]
-    extracted_info = app.get("extracted_data", {}).get("scraped_info", "")
-
-    program_info = {
-        "program": app.get("program_name") or "Neprecizat",
-        "masura": app.get("measure_name") or app.get("measure_code") or "",
-        "sesiune": app.get("call_name") or "",
-        "tip_proiect": app.get("tip_proiect") or "Nesetat",
-        "locatie_implementare": app.get("locatie_implementare") or app.get("judet_implementare") or "",
-        "tema_proiect": app.get("tema_proiect") or app.get("description") or "",
-        "buget_estimat": app.get("budget_estimated") or 0,
-        "achizitii": len(app.get("achizitii", [])),
-    }
-    if call:
-        program_info.update({
-            "buget_sesiune": call.get("budget"),
-            "valoare_min": call.get("value_min"),
-            "valoare_max": call.get("value_max"),
-            "beneficiari_eligibili": call.get("beneficiaries", []),
-            "data_start": call.get("start_date"),
-            "data_sfarsit": call.get("end_date"),
-            "regiune": call.get("region"),
-        })
-    if guide_files:
-        program_info["ghiduri_incarcate"] = guide_files
-    if extracted_info:
-        program_info["date_extrase_din_linkuri"] = extracted_info[:2000]
-
-    # Get custom rules for eligibility agent
+    from services.context_builder import build_full_context
+    full_ctx = await build_full_context(app_id, db)
+    if not full_ctx: raise HTTPException(404)
     custom_rules = await db.agent_rules.find_one({"agent_id": "eligibilitate", "user_id": current_user["user_id"]}, {"_id": 0})
-    if custom_rules and custom_rules.get("reguli"):
-        program_info["reguli_custom_agent"] = custom_rules["reguli"]
-
-    result = await check_eligibility(firm_data, program_info)
-
-    report = {
-        "id": str(uuid.uuid4()), "type": "evaluation", "application_id": app_id,
-        "result": result.get("result", ""),
-        "firm_data_used": firm_data,
-        "program_info_used": program_info,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
+    extra = "\n".join(custom_rules.get("reguli", [])) if custom_rules else ""
+    result = await check_eligibility({}, {}, full_context=full_ctx, extra_rules=extra)
+    report = {"id": str(uuid.uuid4()), "type": "evaluation", "application_id": app_id, "result": result.get("result", ""), "created_at": datetime.now(timezone.utc).isoformat()}
     await db.compliance_reports.insert_one(report)
-
-    # Agent run log
-    await db.agent_runs.insert_one({
-        "id": str(uuid.uuid4()), "agent_id": "eligibilitate",
-        "application_id": app_id, "action": "evaluate",
-        "applied_rules": (custom_rules.get("reguli", []) if custom_rules else []),
-        "input": {"firm_fields": len(firm_data), "program_fields": len(program_info)},
-        "output": {"success": result.get("success", False)},
-        "timestamp": datetime.now(timezone.utc).isoformat(), "user_id": current_user["user_id"]
-    })
-
+    await db.agent_runs.insert_one({"id": str(uuid.uuid4()), "agent_id": "eligibilitate", "application_id": app_id, "action": "evaluate", "applied_rules": (custom_rules.get("reguli", []) if custom_rules else []), "timestamp": datetime.now(timezone.utc).isoformat(), "user_id": current_user["user_id"]})
     report.pop("_id", None)
     return report
 
