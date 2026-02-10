@@ -101,6 +101,48 @@ export function DosareDetailPage() {
     setOrchestratorLoading(false);
   };
 
+  const saveConfig = async () => {
+    try {
+      await api.put(`/v2/applications/${id}`, { tip_proiect: config.tip_proiect, locatie_implementare: config.locatie, judet_implementare: config.judet, tema_proiect: config.tema, achizitii });
+      load();
+    } catch (e) { console.error(e); }
+  };
+
+  const searchAchizitii = async () => {
+    if (achizitiiSearch.length < 2) return;
+    try {
+      const [s, a] = await Promise.all([
+        api.get(`/funding/sicap/search?q=${encodeURIComponent(achizitiiSearch)}`),
+        api.get(`/funding/afir/preturi?q=${encodeURIComponent(achizitiiSearch)}`)
+      ]);
+      setSicapResults(s.data || []);
+      setAfirResults(a.data || []);
+    } catch (e) { console.error(e); }
+  };
+
+  const addAchizitie = (item) => {
+    setAchizitii([...achizitii, { id: Date.now().toString(), descriere: item.descriere || item.subcategorie, cpv: item.cod || '', cantitate: 1, pret_unitar: item.pret_referinta_min || item.pret_min || 0 }]);
+  };
+
+  const runPreeligibility = async () => {
+    setPreeligLoading(true);
+    try { const res = await api.post(`/v2/applications/${id}/evaluate`); setPreeligReport(res.data); } catch (e) { console.error(e); }
+    setPreeligLoading(false);
+  };
+
+  const sendChat = async () => {
+    if (!chatMsg.trim()) return;
+    const msg = chatMsg;
+    setChatHistory([...chatHistory, { role: 'user', text: msg }]);
+    setChatMsg('');
+    setChatLoading(true);
+    try {
+      const res = await api.post('/compliance/navigator', { message: msg, project_id: null });
+      setChatHistory(h => [...h, { role: 'assistant', text: res.data.response }]);
+    } catch (e) { setChatHistory(h => [...h, { role: 'assistant', text: 'Eroare.' }]); }
+    setChatLoading(false);
+  };
+
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Se încarcă...</div>;
   if (!app) return <div className="text-muted-foreground text-center">Dosarul nu a fost găsit</div>;
 
