@@ -275,14 +275,178 @@ async def upload_guide(app_id: str, file: UploadFile = File(...), tip: str = For
     fid = str(uuid.uuid4())
     ext = os.path.splitext(file.filename)[1] if file.filename else ""
     safe = f"{fid}{ext}"
-    content = await file.read()
-    with open(os.path.join(upload_dir, safe), "wb") as f: f.write(content)
-    asset = {"id": fid, "filename": file.filename, "stored_name": safe, "file_size": len(content), "tip": tip, "uploaded_at": datetime.now(timezone.utc).isoformat(), "uploaded_by": current_user["user_id"]}
+    raw_content = await file.read()
+    filepath = os.path.join(upload_dir, safe)
+    with open(filepath, "wb") as f: f.write(raw_content)
+
+    asset = {"id": fid, "filename": file.filename, "stored_name": safe, "file_size": len(raw_content), "tip": tip, "uploaded_at": datetime.now(timezone.utc).isoformat(), "uploaded_by": current_user["user_id"]}
+    agent_actions = []
+
+    # === AGENT PARSER: Extract text content from guide ===
+    try:
+        import base64
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContent
+
+        ext_lower = ext.lower()
+        ct_map = {".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png"}
+        content_type = ct_map.get(ext_lower)
+
+        chat = LlmChat(api_key=os.environ.get("EMERGENT_LLM_KEY", ""), session_id=str(uuid.uuid4()),
+            system_message="Ești expert în analiză ghiduri de finanțare din România. Extrage informații structurate.")
+        chat.with_model("openai", "gpt-5.2")
+
+        extract_prompt = (
+            "Analizează acest document (ghid solicitant / anexă / procedură de evaluare) și extrage TOATE informațiile relevante.\n"
+            "Returnează un JSON STRICT cu aceste câmpuri:\n"
+            '{\n'
+            '  "tip_document": "ghid_solicitant / procedura_evaluare / anexa / grila_conformitate / altul",\n'
+            '  "program": "numele programului",\n'
+            '  "masura": "codul și numele măsurii",\n'
+            '  "sesiune": "numele sesiunii/apelului",\n'
+            '  "buget_total": "number sau null",\n'
+            '  "valoare_min_proiect": "number sau null",\n'
+            '  "valoare_max_proiect": "number sau null",\n'
+            '  "beneficiari_eligibili": ["lista tipurilor de beneficiari"],\n'
+            '  "criterii_eligibilitate": ["lista criteriilor de eligibilitate"],\n'
+            '  "documente_obligatorii": [{"nume": "string", "obligatoriu": true/false}],\n'
+            '  "grila_conformitate": [{"criteriu": "string", "punctaj_max": "number sau null"}],\n'
+            '  "termene": {"data_start": "string", "data_sfarsit": "string"},\n'
+            '  "activitati_eligibile": ["lista activităților eligibile"],\n'
+            '  "cheltuieli_eligibile": ["lista cheltuielilor eligibile"],\n'
+            '  "rezumat": "rezumat 3-5 propoziții"\n'
+            '}\n'
+            "IMPORTANT: Returnează DOAR JSON-ul valid. Dacă un câmp nu e disponibil, pune null."
+        )
+
+        if content_type in ["application/pdf", "image/jpeg", "image/png"]:
+            b64 = base64.b64encode(raw_content).decode("utf-8")
+            msg = UserMessage(text=extract_prompt, file_contents=[FileContent(content_type=content_type, file_content_base64=b64)])
+        else:
+            try:
+                text = raw_content.decode("utf-8", errors="replace")
+            except Exception:
+                text = raw_content.decode("latin-1", errors="replace")
+            msg = UserMessage(text=f"{extract_prompt}\n\nCONȚINUT DOCUMENT:\n{text[:8000]}")
+
+        response = await chat.send_message(msg)
+
+        # Parse JSON from response
+        import json as json_mod, re
+        clean = response.strip()
+        if clean.startswith("```"): clean = clean.split("\n", 1)[1] if "\n" in clean else clean[3:]
+        if clean.endswith("```"): clean = clean[:-3]
+        if clean.startswith("json"): clean = clean[4:]
+        clean = clean.strip()
+        start = clean.find("{")
+        end = clean.rfind("}") + 1
+        extracted = {}
+        if start >= 0 and end > start:
+            try:
+                extracted = json_mod.loads(clean[start:end])
+            except Exception:
+                pass
+
+        asset["extracted_content"] = extracted
+        asset["extraction_status"] = "completed" if extracted else "failed"
+        agent_actions.append(f"Parser: Document analizat, {len(extracted)} câmpuri extrase")
+
+        # === AUTO-ACTIONS based on extracted content ===
+        app = await db.applications.find_one({"id": app_id}, {"_id": 0})
+
+        # 1. Update program/session info if missing
+        if extracted and app:
+            updates = {}
+            if extracted.get("program") and not app.get("program_name"):
+                updates["program_name"] = extracted["program"]
+            if extracted.get("masura") and not app.get("measure_name"):
+                updates["measure_name"] = extracted["masura"]
+            if extracted.get("sesiune") and (not app.get("call_name") or app.get("call_name") == "Sesiune custom"):
+                updates["call_name"] = extracted["sesiune"]
+            if extracted.get("valoare_max_proiect") and not app.get("budget_estimated"):
+                try:
+                    updates["budget_estimated"] = float(extracted["valoare_max_proiect"])
+                    updates["call_value_max"] = float(extracted["valoare_max_proiect"])
+                except (ValueError, TypeError): pass
+            if extracted.get("valoare_min_proiect"):
+                try: updates["call_value_min"] = float(extracted["valoare_min_proiect"])
+                except (ValueError, TypeError): pass
+            if extracted.get("buget_total"):
+                try: updates["call_budget"] = float(extracted["buget_total"])
+                except (ValueError, TypeError): pass
+            if extracted.get("beneficiari_eligibili"):
+                updates["call_beneficiaries"] = extracted["beneficiari_eligibili"]
+            if updates:
+                updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+                await db.applications.update_one({"id": app_id}, {"$set": updates})
+                agent_actions.append(f"Colector: Actualizate {', '.join(updates.keys())}")
+
+        # 2. Auto-propose required documents from guide
+        if extracted.get("documente_obligatorii") and app and not app.get("checklist_frozen"):
+            existing_names = [r.get("official_name", "").lower() for r in app.get("required_documents", [])]
+            new_docs = []
+            for i, doc_req in enumerate(extracted["documente_obligatorii"]):
+                name = doc_req.get("nume", "") if isinstance(doc_req, dict) else str(doc_req)
+                if name and name.lower() not in existing_names:
+                    new_docs.append({
+                        "id": str(uuid.uuid4()), "order_index": len(existing_names) + len(new_docs) + 1,
+                        "official_name": name, "required": doc_req.get("obligatoriu", True) if isinstance(doc_req, dict) else True,
+                        "folder_group": "depunere", "status": "missing", "source": "ghid_auto"
+                    })
+            if new_docs:
+                await db.applications.update_one({"id": app_id}, {"$push": {"required_documents": {"$each": new_docs}}})
+                agent_actions.append(f"Checklist: {len(new_docs)} documente cerute adăugate automat din ghid")
+
+        # 3. Store eligibility criteria for later use
+        if extracted.get("criterii_eligibilitate"):
+            await db.applications.update_one({"id": app_id}, {"$set": {"criterii_eligibilitate_ghid": extracted["criterii_eligibilitate"]}})
+            agent_actions.append(f"Eligibilitate: {len(extracted['criterii_eligibilitate'])} criterii extrase din ghid")
+
+        # 4. Store conformity grid
+        if extracted.get("grila_conformitate"):
+            await db.applications.update_one({"id": app_id}, {"$set": {"grila_conformitate_ghid": extracted["grila_conformitate"]}})
+            agent_actions.append(f"Evaluator: Grilă conformitate cu {len(extracted['grila_conformitate'])} criterii extrasă")
+
+        # 5. Store eligible activities/expenses
+        if extracted.get("activitati_eligibile"):
+            await db.applications.update_one({"id": app_id}, {"$set": {"activitati_eligibile": extracted["activitati_eligibile"]}})
+        if extracted.get("cheltuieli_eligibile"):
+            await db.applications.update_one({"id": app_id}, {"$set": {"cheltuieli_eligibile": extracted["cheltuieli_eligibile"]}})
+
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Guide extraction failed: {e}")
+        asset["extraction_status"] = "error"
+        asset["extraction_error"] = str(e)[:200]
+        agent_actions.append(f"Eroare parsare ghid: {str(e)[:100]}")
+
+    # Save asset with extraction results
     await db.applications.update_one({"id": app_id}, {"$push": {"guide_assets": asset}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}})
-    # Auto-transition to guide_ready if currently call_selected
+
+    # Auto-transition to guide_ready
     app = await db.applications.find_one({"id": app_id}, {"_id": 0})
     if app and app["status"] == "call_selected":
-        await db.applications.update_one({"id": app_id}, {"$set": {"status": "guide_ready", "status_label": APPLICATION_STATE_LABELS["guide_ready"]}, "$push": {"history": {"from": "call_selected", "to": "guide_ready", "at": datetime.now(timezone.utc).isoformat(), "by": "system", "reason": "Ghid încărcat"}}})
+        await db.applications.update_one({"id": app_id}, {"$set": {"status": "guide_ready", "status_label": APPLICATION_STATE_LABELS["guide_ready"]}, "$push": {"history": {"from": "call_selected", "to": "guide_ready", "at": datetime.now(timezone.utc).isoformat(), "by": "orchestrator", "reason": "Ghid procesat automat"}}})
+
+    # Log all agent runs
+    for action in agent_actions:
+        agent_name = action.split(":")[0].strip().lower()
+        await db.agent_runs.insert_one({
+            "id": str(uuid.uuid4()), "agent_id": agent_name if agent_name in ["parser", "colector", "eligibilitate", "evaluator", "checklist"] else "orchestrator",
+            "application_id": app_id, "action": "guide_upload_processing",
+            "input": {"filename": file.filename, "tip": tip},
+            "output": {"action": action},
+            "timestamp": datetime.now(timezone.utc).isoformat(), "user_id": current_user["user_id"]
+        })
+
+    await db.audit_log.insert_one({
+        "id": str(uuid.uuid4()), "action": "guide.uploaded_and_processed",
+        "entity_type": "application", "entity_id": app_id,
+        "user_id": current_user["user_id"],
+        "details": {"filename": file.filename, "actions": agent_actions},
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+
+    asset["agent_actions"] = agent_actions
     return asset
 
 # --- Required Documents (Checklist) ---
