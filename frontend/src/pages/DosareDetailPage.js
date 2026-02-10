@@ -83,6 +83,12 @@ export function DosareDetailPage() {
     setValidating(false);
   };
 
+  const runOrchestrator = async () => {
+    setOrchestratorLoading(true);
+    try { const res = await api.post(`/v2/applications/${id}/orchestrator`); setOrchestratorReport(res.data); } catch (e) { console.error(e); }
+    setOrchestratorLoading(false);
+  };
+
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Se încarcă...</div>;
   if (!app) return <div className="text-muted-foreground text-center">Dosarul nu a fost găsit</div>;
 
