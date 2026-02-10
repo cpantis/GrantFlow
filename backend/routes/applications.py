@@ -634,6 +634,39 @@ async def upload_app_document(app_id: str, file: UploadFile = File(...), folder_
     doc["ocr_actions"] = ocr_actions
     return doc
 
+
+@router.delete("/applications/{app_id}/documents/{doc_id}")
+async def delete_app_document(app_id: str, doc_id: str, current_user: dict = Depends(get_current_user)):
+    app = await db.applications.find_one({"id": app_id}, {"_id": 0})
+    if not app: raise HTTPException(404, "Dosar negăsit")
+    doc = next((d for d in app.get("documents", []) if d["id"] == doc_id), None)
+    if not doc: raise HTTPException(404, "Document negăsit")
+    # Remove from documents array
+    await db.applications.update_one({"id": app_id}, {"$pull": {"documents": {"id": doc_id}}})
+    # If linked to required doc, reset status to missing
+    if doc.get("required_doc_id"):
+        await db.applications.update_one({"id": app_id, "required_documents.id": doc["required_doc_id"]}, {"$set": {"required_documents.$.status": "missing"}})
+    # Delete physical file
+    for d in ["uploads/app_docs", "uploads/generated"]:
+        fpath = os.path.join(os.path.dirname(os.path.dirname(__file__)), d, doc.get("stored_name", ""))
+        if os.path.exists(fpath):
+            os.remove(fpath)
+            break
+    await db.audit_log.insert_one({"id": str(uuid.uuid4()), "action": "document.deleted", "entity_type": "application", "entity_id": app_id, "user_id": current_user["user_id"], "details": {"filename": doc.get("filename"), "folder": doc.get("folder_group")}, "timestamp": datetime.now(timezone.utc).isoformat()})
+    return {"message": f"Document '{doc.get('filename')}' șters"}
+
+@router.delete("/applications/{app_id}/guide/{guide_id}")
+async def delete_guide(app_id: str, guide_id: str, current_user: dict = Depends(get_current_user)):
+    app = await db.applications.find_one({"id": app_id}, {"_id": 0})
+    if not app: raise HTTPException(404, "Dosar negăsit")
+    guide = next((g for g in app.get("guide_assets", []) if g["id"] == guide_id), None)
+    if not guide: raise HTTPException(404, "Ghid negăsit")
+    await db.applications.update_one({"id": app_id}, {"$pull": {"guide_assets": {"id": guide_id}}})
+    fpath = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "guides", guide.get("stored_name", ""))
+    if os.path.exists(fpath): os.remove(fpath)
+    await db.audit_log.insert_one({"id": str(uuid.uuid4()), "action": "guide.deleted", "entity_type": "application", "entity_id": app_id, "user_id": current_user["user_id"], "details": {"filename": guide.get("filename")}, "timestamp": datetime.now(timezone.utc).isoformat()})
+    return {"message": f"Ghid '{guide.get('filename')}' șters"}
+
 # --- Drafts ---
 class GenerateDraftRequest(BaseModel):
     template_id: str
