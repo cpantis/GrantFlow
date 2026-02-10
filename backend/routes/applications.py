@@ -331,8 +331,12 @@ async def upload_guide(app_id: str, file: UploadFile = File(...), tip: str = For
         ct_map = {".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png"}
         content_type = ct_map.get(ext_lower)
 
+        # Load custom rules for parser agent
+        parser_rules = await db.agent_rules.find_one({"agent_id": "parser", "user_id": current_user["user_id"]}, {"_id": 0})
+        parser_extra = "\n".join(parser_rules.get("reguli", [])) if parser_rules else ""
+
         chat = LlmChat(api_key=os.environ.get("EMERGENT_LLM_KEY", ""), session_id=str(uuid.uuid4()),
-            system_message="Ești expert în analiză ghiduri de finanțare din România. Extrage informații structurate.")
+            system_message="Ești expert în analiză ghiduri de finanțare din România. Extrage informații structurate." + (f"\nReguli suplimentare: {parser_extra}" if parser_extra else ""))
         chat.with_model("openai", "gpt-5.2")
 
         extract_prompt = (
