@@ -255,12 +255,14 @@ async def run_agent(agent_id: str, req: RunAgentRequest, current_user: dict = De
             tpl = next((t for t in custom_tpls if t["id"] == template_id), None)
         if not tpl:
             raise HTTPException(404, "Template negăsit")
-        company_ctx = app.get("company_context") or {k: (org or {}).get(k) for k in ["denumire", "cui", "adresa", "judet", "forma_juridica"]}
-        data = {"dosar": {"title": app["title"], "call": app.get("call_name"), "program": app.get("program_name"), "budget": app.get("budget_estimated")}, "firma": company_ctx}
-        ai_result = await generate_document_section(template=f"{tpl['label']}: {', '.join(tpl.get('sections', []))}\n{rules_text}", data=data, section=req.input_data.get("section") or ", ".join(tpl.get("sections", [])))
+        ai_result = await generate_document_section(
+            template=f"{tpl['label']}: {', '.join(tpl.get('sections', []))}",
+            data={}, section=req.input_data.get("section") or ", ".join(tpl.get("sections", [])),
+            full_context=full_ctx, extra_rules=rules_text
+        )
         content = ai_result.get("result", "")
         import os
-        pdf_file = generate_pdf(tpl["label"], content, (org or {}).get("denumire", ""), app["title"])
+        pdf_file = generate_pdf(tpl["label"], content, full_ctx.get("firma", {}).get("denumire", ""), app["title"])
         draft = {"id": str(uuid.uuid4()), "template_id": template_id, "template_label": tpl["label"], "content": content, "pdf_filename": pdf_file, "status": "draft", "version": 1, "created_at": datetime.now(timezone.utc).isoformat(), "created_by": current_user["user_id"], "applied_rules": rules}
         await db.applications.update_one({"id": req.application_id}, {"$push": {"drafts": draft}})
         result = {"draft_id": draft["id"], "pdf_url": f"/api/funding/drafts/download/{pdf_file}", "preview": content[:300]}
