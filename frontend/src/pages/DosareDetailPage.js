@@ -426,9 +426,28 @@ export function DosareDetailPage() {
                   <div><input type="file" id={`folder-${fg.key}`} className="hidden" onChange={(e) => uploadDocument(e, fg.key)} /><Button variant="outline" size="sm" onClick={() => document.getElementById(`folder-${fg.key}`).click()} data-testid={`upload-${fg.key}`}><Upload className="w-3 h-3 mr-1" />Upload</Button></div>
                 </div>
                 {folderDocs.length === 0 ? <p className="text-sm text-muted-foreground pl-6">Niciun document</p> : folderDocs.map(d => (
-                  <Card key={d.id} className="bg-card border-border ml-6"><CardContent className="p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2"><FileText className="w-4 h-4 text-muted-foreground" /><span className="text-sm font-medium">{d.filename}</span></div>
-                    <Badge className={`text-xs rounded-full ${d.status === 'uploaded' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>{d.status}</Badge>
+                  <Card key={d.id} className="bg-card border-border ml-6"><CardContent className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm font-medium truncate">{d.filename}</span>
+                        {d.tip_document && d.tip_document !== 'altele' && <Badge variant="secondary" className="text-xs">{d.tip_document}</Badge>}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {d.ocr_status === 'completed' && <Badge className="text-xs rounded-full bg-green-50 text-green-600"><CheckCircle className="w-3 h-3 mr-1" />OCR OK</Badge>}
+                        {d.ocr_status === 'needs_review' && <Badge className="text-xs rounded-full bg-amber-50 text-amber-600"><AlertTriangle className="w-3 h-3 mr-1" />Revizuire</Badge>}
+                        {d.ocr_status === 'processing' && <Badge className="text-xs rounded-full bg-blue-50 text-blue-600"><Loader2 className="w-3 h-3 mr-1 animate-spin" />OCR...</Badge>}
+                        <Badge className={`text-xs rounded-full ${d.status === 'uploaded' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>{d.status}</Badge>
+                      </div>
+                    </div>
+                    {d.ocr_data?.extracted_fields && Object.keys(d.ocr_data.extracted_fields).length > 0 && (
+                      <div className="mt-2 pl-6 text-xs text-muted-foreground border-t pt-2 flex flex-wrap gap-x-4 gap-y-1">
+                        {Object.entries(d.ocr_data.extracted_fields).slice(0, 5).map(([k, v]) => (
+                          <span key={k}><strong className="text-foreground/70">{k.replace(/_/g, ' ')}:</strong> {String(v).slice(0, 40)}</span>
+                        ))}
+                        {Object.keys(d.ocr_data.extracted_fields).length > 5 && <span>+{Object.keys(d.ocr_data.extracted_fields).length - 5} câmpuri</span>}
+                      </div>
+                    )}
                   </CardContent></Card>
                 ))}
               </div>
