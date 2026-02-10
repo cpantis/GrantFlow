@@ -306,3 +306,15 @@ async def export_application_zip(app_id: str, current_user: dict = Depends(get_c
     zip_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", f"export_{app_id}.zip")
     with open(zip_path, "wb") as f: f.write(zip_buffer.getvalue())
     return FileResponse(zip_path, media_type="application/zip", filename=f"Dosar_{app.get('call_code','')}.zip")
+
+
+# --- Orchestrator ---
+@router.post("/applications/{app_id}/orchestrator")
+async def orchestrator_check(app_id: str, current_user: dict = Depends(get_current_user)):
+    """Run orchestrator agent to check all agents and determine actions."""
+    app = await db.applications.find_one({"id": app_id}, {"_id": 0})
+    if not app: raise HTTPException(404, "Dosar negăsit")
+    org = await db.organizations.find_one({"id": app.get("company_id")}, {"_id": 0})
+    if not org: raise HTTPException(404, "Firmă negăsită")
+    result = await run_orchestrator_check(app, org, db)
+    return result
