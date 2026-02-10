@@ -125,38 +125,7 @@ export function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-heading text-xl font-bold">Proiecte recente</h2>
-            <Link to="/projects" className="text-sm text-primary hover:underline flex items-center gap-1" data-testid="view-all-projects">
-              Vezi toate <ArrowUpRight className="w-3 h-3" />
-            </Link>
-          </div>
-          {projects.length === 0 ? (
-            <Card className="bg-card border-border"><CardContent className="p-10 text-center text-muted-foreground">
-              Niciun proiect încă. <Link to="/projects" className="text-primary hover:underline font-medium">Creează primul proiect</Link>
-            </CardContent></Card>
-          ) : (
-            <div className="space-y-3">
-              {projects.slice(0, 5).map((p) => (
-                <Link key={p.id} to={`/projects/${p.id}`} data-testid={`project-card-${p.id}`}>
-                  <Card className="bg-card border-border hover:border-primary/30 transition-colors duration-200">
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div className="space-y-1">
-                        <p className="font-semibold text-[15px]">{p.titlu}</p>
-                        <p className="text-sm text-muted-foreground">{p.organizatie_denumire} &middot; {p.program_finantare}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Badge className={`rounded-full px-2.5 py-0.5 text-xs font-medium border ${STATE_COLORS[p.stare] || STATE_COLORS.draft}`}>
-                          {p.stare_label}
-                        </Badge>
-                        <ArrowUpRight className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
+          <MoltBot activeFirm={activeFirm} />
         </div>
 
         <div className="space-y-4">
