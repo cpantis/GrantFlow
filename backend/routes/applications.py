@@ -85,6 +85,14 @@ async def afir_search(q: str):
     if len(q) < 2: return []
     return [p for p in AFIR_PRETURI if q.lower() in p["subcategorie"].lower() or q.lower() in p["categorie"].lower()]
 
+
+@router.get("/drafts/download/{filename}")
+async def download_draft_pdf(filename: str):
+    filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "generated", filename)
+    if not os.path.exists(filepath):
+        raise HTTPException(404, "Fișier negăsit")
+    return FileResponse(filepath, media_type="application/pdf", filename=filename)
+
 @router.get("/states")
 async def get_states():
     return {"states": APPLICATION_STATE_LABELS, "transitions": APPLICATION_TRANSITIONS, "order": APPLICATION_STATES}
