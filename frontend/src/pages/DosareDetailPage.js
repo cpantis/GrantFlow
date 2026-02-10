@@ -27,6 +27,8 @@ export function DosareDetailPage() {
   const [validating, setValidating] = useState(false);
   const [validationReport, setValidationReport] = useState(null);
   const [newReqDoc, setNewReqDoc] = useState({ official_name: '', folder_group: 'depunere', required: true });
+  const [orchestratorReport, setOrchestratorReport] = useState(null);
+  const [orchestratorLoading, setOrchestratorLoading] = useState(false);
 
   const load = async () => {
     try {
