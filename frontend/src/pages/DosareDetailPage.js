@@ -110,7 +110,14 @@ export function DosareDetailPage() {
 
   const saveConfig = async () => {
     try {
-      await api.put(`/v2/applications/${id}`, { tip_proiect: config.tip_proiect, locatie_implementare: config.locatie, judet_implementare: config.judet, tema_proiect: config.tema, achizitii });
+      await api.put(`/v2/applications/${id}`, {
+        tip_proiect: config.tip_proiect,
+        locatie_implementare: config.locatie,
+        judet_implementare: config.judet,
+        tema_proiect: config.tema,
+        budget_estimated: parseFloat(config.buget) || 0,
+        achizitii
+      });
       load();
     } catch (e) { console.error(e); }
   };
