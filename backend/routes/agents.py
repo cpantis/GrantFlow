@@ -231,21 +231,10 @@ async def run_agent(agent_id: str, req: RunAgentRequest, current_user: dict = De
 
     # --- ELIGIBILITATE ---
     elif agent_id == "eligibilitate":
-        if not app or not org:
-            raise HTTPException(400, "application_id și firmă necesare")
+        if not req.application_id:
+            raise HTTPException(400, "application_id necesar")
         from services.ai_service import check_eligibility
-        from services.funding_service import get_call
-        call = get_call(app.get("call_id", ""))
-        firm_data = {k: org.get(k) for k in ["denumire", "cui", "forma_juridica", "caen_principal", "caen_secundare", "nr_angajati", "data_infiintare", "stare", "judet", "capital_social"]}
-        firm_data["date_financiare"] = org.get("date_financiare") or org.get("date_financiare_ocr")
-        program_info = {
-            "program": app.get("program_name"), "sesiune": app.get("call_name"), "buget_estimat": app.get("budget_estimated"),
-            "tip_proiect": app.get("tip_proiect"), "tema": app.get("tema_proiect") or app.get("description"),
-        }
-        if call:
-            program_info.update({"buget_sesiune": call.get("budget"), "valoare_min": call.get("value_min"), "valoare_max": call.get("value_max"), "beneficiari": call.get("beneficiaries"), "regiune": call.get("region")})
-        program_info["reguli_agent"] = rules_text
-        ai_result = await check_eligibility(firm_data, program_info)
+        ai_result = await check_eligibility({}, {}, full_context=full_ctx, extra_rules=rules_text)
         report = {"id": str(uuid.uuid4()), "type": "evaluation", "application_id": req.application_id, "result": ai_result.get("result", ""), "created_at": datetime.now(timezone.utc).isoformat()}
         await db.compliance_reports.insert_one(report)
         result = {"report_id": report["id"], "success": ai_result.get("success"), "preview": ai_result.get("result", "")[:300]}
