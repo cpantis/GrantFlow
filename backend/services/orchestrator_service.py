@@ -89,10 +89,21 @@ async def run_orchestrator_check(app: dict, org: dict, db, user_id: str = None) 
     needs_action = any(c["status"] == "actiune_necesara" for c in checks)
 
     # AI analysis
+    # Include all agent custom rules in orchestrator prompt
+    rules_section = ""
+    if all_rules:
+        rules_parts = []
+        for agent_name, agent_rules in all_rules.items():
+            if agent_rules:
+                rules_parts.append(f"**{agent_name}**: {'; '.join(agent_rules)}")
+        if rules_parts:
+            rules_section = "\n\n## Reguli custom active per agent:\n" + "\n".join(rules_parts)
+
     chat = _get_chat(
         "Ești Orchestratorul GrantFlow. Analizezi starea completă a unui dosar de finanțare "
-        "și determini acțiunile prioritare per agent. Oferă un raport structurat cu pași concreți."
-        + (f"\nReguli suplimentare: {extra_rules}" if extra_rules else "")
+        "și determini acțiunile prioritare per agent. Ții cont de regulile custom setate pentru fiecare agent. "
+        "Oferă un raport structurat cu pași concreți."
+        + (f"\nReguli orchestrator: {extra_rules}" if extra_rules else "")
     )
     prompt = (
         f"**Dosar:** {app.get('title')} | Status: **{app.get('status_label')}**\n"
