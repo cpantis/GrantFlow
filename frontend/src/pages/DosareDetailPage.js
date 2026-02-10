@@ -286,6 +286,98 @@ export function DosareDetailPage() {
           )}
         </TabsContent>
 
+        {/* CONFIGURARE PROIECT */}
+        <TabsContent value="config" className="space-y-4">
+          <h2 className="font-heading text-lg font-bold flex items-center gap-2"><Settings className="w-5 h-5 text-primary" />Configurare proiect</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Tip proiect</Label>
+              <select className="w-full h-10 rounded-md border px-3 text-sm" value={config.tip_proiect} onChange={(e) => setConfig({...config, tip_proiect: e.target.value})} data-testid="config-tip">
+                <option value="">Selectează...</option>
+                <option value="bunuri">Bunuri</option>
+                <option value="bunuri_montaj">Bunuri cu montaj</option>
+                <option value="constructii">Construcții</option>
+                <option value="servicii">Servicii</option>
+                <option value="mixt">Mixt</option>
+              </select>
+            </div>
+            <div className="space-y-2"><Label>Județ implementare</Label><Input value={config.judet} onChange={(e) => setConfig({...config, judet: e.target.value})} placeholder="ex: București" data-testid="config-judet" /></div>
+            <div className="space-y-2 md:col-span-2"><Label>Locație implementare (adresă / CF)</Label><Input value={config.locatie} onChange={(e) => setConfig({...config, locatie: e.target.value})} placeholder="Adresă sau nr. Carte Funciară" data-testid="config-locatie" /></div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Tema proiectului (ce se dorește a fi achiziționat)</Label>
+              <Textarea value={config.tema} onChange={(e) => setConfig({...config, tema: e.target.value})} rows={3} placeholder="Descrieți obiectivele și ce se va achiziționa prin proiect..." data-testid="config-tema" />
+            </div>
+          </div>
+          <Button onClick={saveConfig} data-testid="save-config-btn">Salvează configurarea</Button>
+        </TabsContent>
+
+        {/* PRE-ELIGIBILITATE */}
+        <TabsContent value="preeligibility" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-heading text-lg font-bold flex items-center gap-2"><Shield className="w-5 h-5 text-primary" />Pre-eligibilitate</h2>
+              <p className="text-muted-foreground text-sm">Verifică eligibilitatea firmei pentru sesiunea selectată</p>
+            </div>
+            <Button onClick={runPreeligibility} disabled={preeligLoading} data-testid="run-preelig-btn">
+              {preeligLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Se verifică...</> : <><Bot className="w-4 h-4 mr-2" />Verifică eligibilitate</>}
+            </Button>
+          </div>
+          {app.company_context && (
+            <Card className="bg-card border-border"><CardContent className="p-4">
+              <p className="text-sm text-muted-foreground mb-2">Date firmă verificate:</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                <div><strong>{app.company_context.denumire}</strong></div>
+                <div>CUI: <strong>{app.company_context.cui}</strong></div>
+                <div>CAEN: <strong>{app.company_context.caen_principal?.cod || 'N/A'}</strong></div>
+                <div>Angajați: <strong>{app.company_context.nr_angajati || 'N/A'}</strong></div>
+              </div>
+            </CardContent></Card>
+          )}
+          {preeligReport && (
+            <Card className="bg-card border-border"><CardHeader><CardTitle className="text-base flex items-center gap-2"><Bot className="w-4 h-4 text-primary" />Raport pre-eligibilitate</CardTitle></CardHeader>
+              <CardContent><AiMessage text={preeligReport.result} /></CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* ACHIZIȚII */}
+        <TabsContent value="achizitii" className="space-y-4">
+          <h2 className="font-heading text-lg font-bold flex items-center gap-2"><ShoppingCart className="w-5 h-5 text-primary" />Achiziții proiect (SICAP / AFIR)</h2>
+          <Card className="bg-card border-border"><CardContent className="p-5 space-y-4">
+            <div className="flex gap-2">
+              <Input value={achizitiiSearch} onChange={(e) => setAchizitiiSearch(e.target.value)} placeholder="Caută echipamente, servicii..." className="flex-1" onKeyDown={(e) => e.key === 'Enter' && searchAchizitii()} data-testid="search-achizitii" />
+              <Button onClick={searchAchizitii} data-testid="search-ach-btn"><Search className="w-4 h-4 mr-1" />Caută</Button>
+            </div>
+            {sicapResults.length > 0 && <div><p className="text-sm font-medium mb-2">SICAP (CPV):</p>
+              <div className="space-y-1.5 max-h-40 overflow-y-auto">{sicapResults.map((r, i) => (
+                <div key={i} className="flex items-center justify-between p-2 bg-secondary/30 rounded text-sm">
+                  <div><strong>{r.descriere}</strong><span className="text-muted-foreground ml-2">CPV: {r.cod} &middot; {r.pret_referinta_min?.toLocaleString()}-{r.pret_referinta_max?.toLocaleString()} RON</span></div>
+                  <Button size="sm" variant="ghost" onClick={() => addAchizitie(r)}><Plus className="w-3 h-3" /></Button>
+                </div>
+              ))}</div>
+            </div>}
+            {afirResults.length > 0 && <div><p className="text-sm font-medium mb-2">AFIR prețuri referință:</p>
+              <div className="space-y-1.5 max-h-40 overflow-y-auto">{afirResults.map((r, i) => (
+                <div key={i} className="flex items-center justify-between p-2 bg-secondary/30 rounded text-sm">
+                  <div><strong>{r.subcategorie}</strong><span className="text-muted-foreground ml-2">{r.pret_min?.toLocaleString()}-{r.pret_max?.toLocaleString()} RON/{r.unitate}</span></div>
+                  <Button size="sm" variant="ghost" onClick={() => addAchizitie(r)}><Plus className="w-3 h-3" /></Button>
+                </div>
+              ))}</div>
+            </div>}
+          </CardContent></Card>
+          {achizitii.length > 0 && <div className="space-y-2">
+            <h3 className="font-heading text-base font-bold">Lista achiziții ({achizitii.length})</h3>
+            {achizitii.map((a, i) => (
+              <Card key={a.id} className="bg-card border-border"><CardContent className="p-3 flex items-center justify-between">
+                <div><p className="font-medium text-sm">{a.descriere}</p><p className="text-xs text-muted-foreground">{a.cpv && `CPV: ${a.cpv} · `}{a.cantitate} × {a.pret_unitar?.toLocaleString()} RON</p></div>
+                <p className="font-bold text-sm">{(a.cantitate * a.pret_unitar)?.toLocaleString()} RON</p>
+              </CardContent></Card>
+            ))}
+            <Card className="bg-primary/5 border-primary/20"><CardContent className="p-3 flex justify-between"><strong>Total</strong><strong className="text-primary">{achizitii.reduce((s, a) => s + a.cantitate * a.pret_unitar, 0)?.toLocaleString()} RON</strong></CardContent></Card>
+            <Button onClick={saveConfig} size="sm">Salvează achizițiile</Button>
+          </div>}
+        </TabsContent>
+
         <TabsContent value="checklist" className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-heading text-lg font-bold">Documente cerute (Checklist)</h2>
