@@ -268,16 +268,35 @@ export function DosareDetailPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
+          {/* KPI cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Program</p><p className="font-bold mt-1">{app.program_name || 'Neprecizat'}</p><p className="text-xs text-muted-foreground">{app.measure_name}</p></CardContent></Card>
-            <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Buget estimat</p><p className="font-bold mt-1">{app.budget_estimated ? `${app.budget_estimated.toLocaleString()} RON` : 'Nesetat'}</p>{app.call_value_max && <p className="text-xs text-muted-foreground">Max eligibil: {app.call_value_max?.toLocaleString()} RON</p>}</CardContent></Card>
-            <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Documente</p><p className="font-bold mt-1">{docs.length} / {reqDocs.length} cerute</p></CardContent></Card>
-            <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Drafturi</p><p className="font-bold mt-1">{drafts.length} generate</p></CardContent></Card>
+            <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Buget estimat</p><p className="font-bold mt-1">{app.budget_estimated ? `${app.budget_estimated.toLocaleString()} RON` : 'Nesetat'}</p>{app.call_value_max && <p className="text-xs text-muted-foreground">Max: {app.call_value_max?.toLocaleString()} RON</p>}</CardContent></Card>
+            <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Documente</p><p className="font-bold mt-1">{docs.length} / {reqDocs.length} cerute</p>{reqDocs.filter(r=>r.status==='missing').length > 0 && <p className="text-xs text-red-500">{reqDocs.filter(r=>r.status==='missing').length} lipsă</p>}</CardContent></Card>
+            <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Drafturi</p><p className="font-bold mt-1">{drafts.length} generate</p><p className="text-xs text-muted-foreground">{guides.length} ghiduri</p></CardContent></Card>
           </div>
-          {app.description && <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground mb-1">Descriere</p><p>{app.description}</p></CardContent></Card>}
+
+          {/* Quick action guide - what to do next */}
+          <Card className="bg-primary/5 border-primary/20"><CardContent className="p-5">
+            <h3 className="font-heading text-base font-bold mb-3 flex items-center gap-2"><Zap className="w-4 h-4 text-primary" />Ce trebuie făcut</h3>
+            <div className="space-y-2">
+              {tabStatus.guide === 'todo' && <div className="flex items-center gap-2 text-sm"><StatusDot status="todo" /><span>Încarcă <strong>ghidul solicitantului</strong> în tab-ul Legislație</span></div>}
+              {tabStatus.config === 'todo' && <div className="flex items-center gap-2 text-sm"><StatusDot status="todo" /><span>Setează <strong>tipul proiectului și bugetul</strong> în Configurare</span></div>}
+              {tabStatus.config === 'partial' && <div className="flex items-center gap-2 text-sm"><StatusDot status="partial" /><span>Completează <strong>configurarea</strong> (tip proiect, buget, temă)</span></div>}
+              {tabStatus.preeligibility === 'todo' && tabStatus.guide === 'done' && <div className="flex items-center gap-2 text-sm"><StatusDot status="todo" /><span>Rulează verificarea de <strong>pre-eligibilitate</strong></span></div>}
+              {tabStatus.achizitii === 'todo' && <div className="flex items-center gap-2 text-sm"><StatusDot status="todo" /><span>Adaugă <strong>achizițiile</strong> din SICAP/AFIR</span></div>}
+              {tabStatus.checklist === 'todo' && tabStatus.guide === 'done' && <div className="flex items-center gap-2 text-sm"><StatusDot status="todo" /><span>Verifică și înghează <strong>checklist-ul</strong> de documente</span></div>}
+              {tabStatus.documents === 'todo' && tabStatus.checklist !== 'todo' && <div className="flex items-center gap-2 text-sm"><StatusDot status="todo" /><span>Încarcă <strong>documentele</strong> în foldere</span></div>}
+              {tabStatus.drafts === 'todo' && <div className="flex items-center gap-2 text-sm"><StatusDot status="todo" /><span>Generează <strong>drafturi</strong> (Cerere finanțare, Plan afaceri)</span></div>}
+              {tabStatus.validation === 'todo' && completedSteps >= 5 && <div className="flex items-center gap-2 text-sm"><StatusDot status="todo" /><span>Rulează <strong>evaluarea</strong> de conformitate</span></div>}
+              {completedSteps === totalSteps && <div className="flex items-center gap-2 text-sm text-green-600"><CheckCircle className="w-4 h-4" /><strong>Dosarul este complet! Poți exporta ZIP-ul pentru depunere.</strong></div>}
+            </div>
+          </CardContent></Card>
+
+          {/* Firm context */}
           {app.company_context && (
             <Card className="bg-card border-border"><CardContent className="p-5">
-              <p className="text-sm text-muted-foreground mb-2">Context firmă activă</p>
+              <p className="text-sm text-muted-foreground mb-2">Firmă activă</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                 <div><span className="text-muted-foreground">Firmă:</span> <strong>{app.company_context.denumire}</strong></div>
                 <div><span className="text-muted-foreground">CUI:</span> <strong>{app.company_context.cui}</strong></div>
@@ -286,11 +305,7 @@ export function DosareDetailPage() {
               </div>
             </CardContent></Card>
           )}
-          {app.extracted_data?.scraped_info && (
-            <Card className="bg-card border-border"><CardHeader><CardTitle className="text-base flex items-center gap-2"><Bot className="w-4 h-4 text-primary" />Date extrase din link-uri (Agent Colector)</CardTitle></CardHeader>
-              <CardContent><AiMessage text={app.extracted_data.scraped_info} /></CardContent>
-            </Card>
-          )}
+          {app.description && <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground mb-1">Descriere</p><p>{app.description}</p></CardContent></Card>}
           {app.custom_links?.length > 0 && (
             <Card className="bg-card border-border"><CardContent className="p-5">
               <p className="text-sm text-muted-foreground mb-2">Link-uri sursă</p>
