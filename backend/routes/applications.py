@@ -599,34 +599,34 @@ class GenerateDraftRequest(BaseModel):
 async def generate_draft(app_id: str, req: GenerateDraftRequest, current_user: dict = Depends(get_current_user)):
     app = await db.applications.find_one({"id": app_id}, {"_id": 0})
     if not app: raise HTTPException(404)
-    # Try standard template first, then custom templates
     tpl = get_template(req.template_id)
     if not tpl:
         custom_tpls = app.get("custom_templates", [])
         tpl = next((t for t in custom_tpls if t["id"] == req.template_id), None)
     if not tpl: raise HTTPException(404, "Template negăsit")
-    org = await db.organizations.find_one({"id": app.get("company_id")}, {"_id": 0})
-    company_ctx = app.get("company_context") or {k: (org or {}).get(k) for k in ["denumire", "cui", "adresa", "judet", "forma_juridica", "nr_reg_com", "caen_principal", "nr_angajati", "data_infiintare"]}
-    data = {
-        "dosar": {"title": app["title"], "call": app.get("call_name"), "program": app.get("program_name"), "measure": app.get("measure_name"), "budget": app.get("budget_estimated"), "description": app.get("description")},
-        "firma": company_ctx,
-        "sesiune_extras": app.get("extracted_data", {}).get("scraped_info", "")
-    }
-    section = req.section or ", ".join(tpl["sections"])
-    # Get custom rules for redactor agent
+
+    # Build full context
+    from services.context_builder import build_full_context
+    full_ctx = await build_full_context(app_id, db)
+
+    section = req.section or ", ".join(tpl.get("sections", []))
     custom_rules = await db.agent_rules.find_one({"agent_id": "redactor", "user_id": current_user["user_id"]}, {"_id": 0})
     extra_rules = "\n".join(custom_rules.get("reguli", [])) if custom_rules else ""
-    result = await generate_document_section(template=f"{tpl['label']}: {', '.join(tpl['sections'])}\n{extra_rules}", data=data, section=section)
+
+    result = await generate_document_section(
+        template=f"{tpl['label']}: {', '.join(tpl.get('sections', []))}",
+        data={}, section=section,
+        full_context=full_ctx, extra_rules=extra_rules
+    )
     content_text = result.get("result", "")
+    org = await db.organizations.find_one({"id": app.get("company_id")}, {"_id": 0})
     pdf_file = generate_pdf(tpl["label"], content_text, (org or {}).get("denumire", ""), app["title"])
     draft = {"id": str(uuid.uuid4()), "template_id": req.template_id, "template_label": tpl["label"], "content": content_text, "pdf_filename": pdf_file, "status": "draft", "version": 1, "created_at": datetime.now(timezone.utc).isoformat(), "created_by": current_user["user_id"], "applied_rules": (custom_rules.get("reguli", []) if custom_rules else [])}
     await db.applications.update_one({"id": app_id}, {"$push": {"drafts": draft}})
-    # Also save as document in depunere folder
     gen_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "generated")
     doc_entry = {"id": str(uuid.uuid4()), "filename": f"{tpl['label']}.pdf", "stored_name": pdf_file, "file_size": os.path.getsize(os.path.join(gen_dir, pdf_file)), "content_type": "application/pdf", "folder_group": "depunere", "status": "uploaded", "uploaded_at": datetime.now(timezone.utc).isoformat(), "uploaded_by": current_user["user_id"], "draft_id": draft["id"]}
     await db.applications.update_one({"id": app_id}, {"$push": {"documents": doc_entry}})
     draft["pdf_url"] = f"/api/funding/drafts/download/{pdf_file}"
-    # Agent run log
     await db.agent_runs.insert_one({"id": str(uuid.uuid4()), "agent_id": "redactor", "application_id": app_id, "action": "generate_draft", "input": {"template": tpl["label"]}, "output": {"draft_id": draft["id"]}, "applied_rules": draft.get("applied_rules", []), "timestamp": datetime.now(timezone.utc).isoformat(), "user_id": current_user["user_id"]})
     return draft
 
