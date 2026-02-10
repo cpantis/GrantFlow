@@ -81,8 +81,8 @@ export function ProjectWritingPage() {
     if (searchQuery.length < 2) return;
     try {
       const [s, a] = await Promise.all([
-        api.get(`/funding/sicap/search?q=${encodeURIComponent(searchQuery)}`),
-        api.get(`/funding/afir/preturi?q=${encodeURIComponent(searchQuery)}`)
+        api.get(`/v2/sicap/search?q=${encodeURIComponent(searchQuery)}`),
+        api.get(`/v2/afir/preturi?q=${encodeURIComponent(searchQuery)}`)
       ]);
       setSicapResults(s.data || []);
       setAfirResults(a.data || []);
