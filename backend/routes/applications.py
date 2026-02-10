@@ -470,12 +470,42 @@ async def validate_application(app_id: str, current_user: dict = Depends(get_cur
     if not app: raise HTTPException(404)
     org = await db.organizations.find_one({"id": app.get("company_id")}, {"_id": 0})
     req_docs = app.get("required_documents", [])
-    uploaded = [d for d in app.get("documents", [])]
+    uploaded_docs = app.get("documents", [])
+    drafts = app.get("drafts", [])
+    guide_files = [g.get("filename") for g in app.get("guide_assets", [])]
+
     custom_rules = await db.agent_rules.find_one({"agent_id": "validator", "user_id": current_user["user_id"]}, {"_id": 0})
     extra = "\n".join(custom_rules.get("reguli", [])) if custom_rules else ""
+
+    # Build comprehensive doc list with OCR status
+    doc_details = []
+    for d in uploaded_docs:
+        detail = {"filename": d.get("filename"), "folder": d.get("folder_group"), "status": d.get("status"), "tip": d.get("tip_document"), "ocr_status": d.get("ocr_status")}
+        if d.get("ocr_data", {}).get("extracted_fields"):
+            detail["ocr_fields"] = list(d["ocr_data"]["extracted_fields"].keys())
+        doc_details.append(detail)
+
     result = await validate_coherence(
-        documents=[{"name": d.get("official_name"), "status": d.get("status"), "required": d.get("required")} for d in req_docs],
-        project_data={"title": app["title"], "call": app.get("call_name"), "program": app.get("program_name"), "company": (org or {}).get("denumire"), "documents_uploaded": len(uploaded), "documents_required": len(req_docs), "extra_rules": extra}
+        documents=doc_details + [{"name": d.get("official_name"), "status": d.get("status"), "required": d.get("required"), "type": "checklist_item"} for d in req_docs],
+        project_data={
+            "title": app["title"],
+            "program": app.get("program_name"),
+            "sesiune": app.get("call_name"),
+            "firma": (org or {}).get("denumire"),
+            "cui": (org or {}).get("cui"),
+            "tip_proiect": app.get("tip_proiect"),
+            "tema": app.get("tema_proiect") or app.get("description"),
+            "buget": app.get("budget_estimated"),
+            "achizitii": len(app.get("achizitii", [])),
+            "documente_incarcate": len(uploaded_docs),
+            "documente_cerute": len(req_docs),
+            "documente_lipsa": len([r for r in req_docs if r.get("status") == "missing"]),
+            "drafturi_generate": len(drafts),
+            "ghiduri": guide_files,
+            "locatie": app.get("locatie_implementare"),
+            "date_extrase": app.get("extracted_data", {}).get("scraped_info", "")[:1000],
+            "reguli_custom": extra
+        }
     )
     report = {"id": str(uuid.uuid4()), "type": "validation", "application_id": app_id, "result": result.get("result", ""), "created_at": datetime.now(timezone.utc).isoformat()}
     await db.compliance_reports.insert_one(report)
