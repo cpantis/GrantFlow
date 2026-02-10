@@ -223,8 +223,8 @@ export function DosareDetailPage() {
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Sesiune</p><p className="font-bold mt-1">{app.call_name}</p></CardContent></Card>
-            <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Ghid & Anexe</p><p className="font-bold mt-1">{app.guide_assets?.length || 0} fișiere</p></CardContent></Card>
+            <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Program</p><p className="font-bold mt-1">{app.program_name || 'Neprecizat'}</p><p className="text-xs text-muted-foreground">{app.measure_name}</p></CardContent></Card>
+            <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Buget estimat</p><p className="font-bold mt-1">{app.budget_estimated ? `${app.budget_estimated.toLocaleString()} RON` : 'Nesetat'}</p>{app.call_value_max && <p className="text-xs text-muted-foreground">Max eligibil: {app.call_value_max?.toLocaleString()} RON</p>}</CardContent></Card>
             <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Documente</p><p className="font-bold mt-1">{docs.length} / {reqDocs.length} cerute</p></CardContent></Card>
             <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Drafturi</p><p className="font-bold mt-1">{drafts.length} generate</p></CardContent></Card>
           </div>
