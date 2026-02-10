@@ -68,8 +68,8 @@ export function ProjectDetailPage() {
           api.get(`/projects/${id}`),
           api.get('/projects/states'),
           api.get(`/compliance/reports/${id}`).catch(() => ({ data: [] })),
-          api.get('/funding/templates').catch(() => ({ data: [] })),
-          api.get(`/funding/drafts/${id}`).catch(() => ({ data: [] })),
+          api.get('/v2/templates').catch(() => ({ data: [] })),
+          api.get(`/v2/applications/${id}/drafts`).catch(() => ({ data: [] })),
         ]);
         setProject(pRes.data);
         setStates(sRes.data.transitions || {});
