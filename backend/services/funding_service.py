@@ -1,202 +1,90 @@
-"""Funding Programs Service - AFIR, SICAP, fonduri.eu mock data sources"""
-import random
-from datetime import datetime
+"""Calls & Applications Service - Domain model for funding workflow"""
 
-# Realistic Romanian EU funding programs database
 PROGRAMS = [
-    {
-        "id": "pnrr",
-        "denumire": "PNRR - Planul Național de Redresare și Reziliență",
-        "sursa": "fonduri.eu",
-        "tip": "european",
-        "masuri": [
-            {
-                "id": "pnrr-c9-i1",
-                "cod": "C9-I1",
-                "denumire": "Sprijin pentru sectorul privat, cercetare, dezvoltare și inovare",
-                "buget_total": 300000000,
-                "sesiuni": [
-                    {"id": "pnrr-c9-i1-s1", "denumire": "Sesiunea 1/2025", "status": "activa", "data_start": "2025-01-15", "data_sfarsit": "2025-06-30", "buget_disponibil": 100000000, "tip_beneficiari": ["IMM", "Startup"], "valoare_min": 50000, "valoare_max": 500000}
-                ]
-            },
-            {
-                "id": "pnrr-c10-i1",
-                "cod": "C10-I1",
-                "denumire": "Fondul local - Digitalizare",
-                "buget_total": 500000000,
-                "sesiuni": [
-                    {"id": "pnrr-c10-i1-s1", "denumire": "Sesiunea 2/2025", "status": "activa", "data_start": "2025-03-01", "data_sfarsit": "2025-09-30", "buget_disponibil": 200000000, "tip_beneficiari": ["IMM", "Mari Întreprinderi"], "valoare_min": 100000, "valoare_max": 2000000}
-                ]
-            },
-            {
-                "id": "pnrr-c11-i3",
-                "cod": "C11-I3",
-                "denumire": "Turism și cultură",
-                "buget_total": 150000000,
-                "sesiuni": [
-                    {"id": "pnrr-c11-i3-s1", "denumire": "Sesiunea 1/2025", "status": "inchisa", "data_start": "2024-06-01", "data_sfarsit": "2025-01-31", "buget_disponibil": 0, "tip_beneficiari": ["IMM", "ONG"], "valoare_min": 30000, "valoare_max": 300000}
-                ]
-            }
-        ]
-    },
-    {
-        "id": "afir",
-        "denumire": "AFIR - Agenția pentru Finanțarea Investițiilor Rurale",
-        "sursa": "AFIR",
-        "tip": "european",
-        "masuri": [
-            {
-                "id": "afir-sm6-1",
-                "cod": "sM6.1",
-                "denumire": "Instalarea tinerilor fermieri",
-                "buget_total": 200000000,
-                "sesiuni": [
-                    {"id": "afir-sm6-1-s1", "denumire": "Sesiunea 2025", "status": "activa", "data_start": "2025-02-01", "data_sfarsit": "2025-12-31", "buget_disponibil": 80000000, "tip_beneficiari": ["Fermieri tineri"], "valoare_min": 50000, "valoare_max": 70000}
-                ]
-            },
-            {
-                "id": "afir-sm4-1",
-                "cod": "sM4.1",
-                "denumire": "Investiții în exploatații agricole",
-                "buget_total": 400000000,
-                "sesiuni": [
-                    {"id": "afir-sm4-1-s1", "denumire": "Sesiunea 1/2025", "status": "activa", "data_start": "2025-04-01", "data_sfarsit": "2025-10-31", "buget_disponibil": 150000000, "tip_beneficiari": ["Fermieri", "Cooperative"], "valoare_min": 100000, "valoare_max": 1000000}
-                ]
-            },
-            {
-                "id": "afir-sm6-4",
-                "cod": "sM6.4",
-                "denumire": "Investiții în crearea și dezvoltarea de activități neagricole",
-                "buget_total": 250000000,
-                "sesiuni": [
-                    {"id": "afir-sm6-4-s1", "denumire": "Sesiunea 2025", "status": "activa", "data_start": "2025-01-15", "data_sfarsit": "2025-08-15", "buget_disponibil": 100000000, "tip_beneficiari": ["IMM rural", "PFA"], "valoare_min": 50000, "valoare_max": 200000}
-                ]
-            }
-        ]
-    },
-    {
-        "id": "poc",
-        "denumire": "POC - Programul Operațional Competitivitate",
-        "sursa": "fonduri.eu",
-        "tip": "european",
-        "masuri": [
-            {
-                "id": "poc-2-2",
-                "cod": "2.2",
-                "denumire": "Sprijin pentru IMM-uri în vederea creșterii competitivității",
-                "buget_total": 350000000,
-                "sesiuni": [
-                    {"id": "poc-2-2-s1", "denumire": "Apel 2025", "status": "activa", "data_start": "2025-05-01", "data_sfarsit": "2025-11-30", "buget_disponibil": 120000000, "tip_beneficiari": ["IMM"], "valoare_min": 200000, "valoare_max": 1500000}
-                ]
-            }
-        ]
-    },
-    {
-        "id": "por",
-        "denumire": "POR - Programul Operațional Regional",
-        "sursa": "fonduri.eu",
-        "tip": "european",
-        "masuri": [
-            {
-                "id": "por-2-1a",
-                "cod": "2.1A",
-                "denumire": "Microîntreprinderi",
-                "buget_total": 200000000,
-                "sesiuni": [
-                    {"id": "por-2-1a-s1", "denumire": "Sesiunea 2025", "status": "activa", "data_start": "2025-03-15", "data_sfarsit": "2025-09-15", "buget_disponibil": 80000000, "tip_beneficiari": ["Microîntreprinderi"], "valoare_min": 25000, "valoare_max": 200000}
-                ]
-            }
-        ]
-    }
+    {"id": "pnrr", "name": "PNRR", "source": "fonduri.eu", "description": "Planul Național de Redresare și Reziliență"},
+    {"id": "afir", "name": "AFIR", "source": "AFIR", "description": "Agenția pentru Finanțarea Investițiilor Rurale"},
+    {"id": "poc", "name": "POC", "source": "fonduri.eu", "description": "Programul Operațional Competitivitate"},
+    {"id": "por", "name": "POR", "source": "fonduri.eu", "description": "Programul Operațional Regional"},
+    {"id": "horizon", "name": "Horizon Europe", "source": "EU", "description": "Programul-cadru pentru cercetare și inovare"},
 ]
 
-# SICAP mock data - procurement codes and reference prices
-SICAP_CPV = [
-    {"cod": "30200000-1", "descriere": "Echipamente informatice și accesorii", "pret_referinta_min": 500, "pret_referinta_max": 15000},
-    {"cod": "30213100-6", "descriere": "Computere portabile (laptopuri)", "pret_referinta_min": 2000, "pret_referinta_max": 8000},
-    {"cod": "30213300-8", "descriere": "Computer de birou", "pret_referinta_min": 1500, "pret_referinta_max": 6000},
-    {"cod": "48000000-8", "descriere": "Pachete software și sisteme informatice", "pret_referinta_min": 1000, "pret_referinta_max": 50000},
-    {"cod": "72000000-5", "descriere": "Servicii IT: consultanță, dezvoltare software", "pret_referinta_min": 5000, "pret_referinta_max": 200000},
-    {"cod": "45000000-7", "descriere": "Lucrări de construcții", "pret_referinta_min": 50000, "pret_referinta_max": 5000000},
-    {"cod": "45210000-2", "descriere": "Lucrări de construcții de clădiri", "pret_referinta_min": 100000, "pret_referinta_max": 10000000},
-    {"cod": "42000000-6", "descriere": "Mașini industriale", "pret_referinta_min": 10000, "pret_referinta_max": 500000},
-    {"cod": "42900000-5", "descriere": "Mașini diverse cu destinație generală și specială", "pret_referinta_min": 5000, "pret_referinta_max": 300000},
-    {"cod": "71000000-8", "descriere": "Servicii de arhitectură, construcții, inginerie", "pret_referinta_min": 3000, "pret_referinta_max": 100000},
-    {"cod": "79000000-4", "descriere": "Servicii pentru întreprinderi: drept, marketing, consultanță", "pret_referinta_min": 2000, "pret_referinta_max": 80000},
-    {"cod": "09331200-0", "descriere": "Module solare fotovoltaice", "pret_referinta_min": 10000, "pret_referinta_max": 200000},
-    {"cod": "31520000-7", "descriere": "Lămpi și corpuri de iluminat", "pret_referinta_min": 500, "pret_referinta_max": 20000},
-    {"cod": "34100000-8", "descriere": "Autovehicule", "pret_referinta_min": 15000, "pret_referinta_max": 150000},
-    {"cod": "39100000-3", "descriere": "Mobilier", "pret_referinta_min": 500, "pret_referinta_max": 30000},
+MEASURES = [
+    {"id": "pnrr-c9-i1", "program_id": "pnrr", "name": "Sprijin sector privat, cercetare, dezvoltare", "code": "C9-I1"},
+    {"id": "pnrr-c10-i1", "program_id": "pnrr", "name": "Fondul local - Digitalizare", "code": "C10-I1"},
+    {"id": "pnrr-c11-i3", "program_id": "pnrr", "name": "Turism și cultură", "code": "C11-I3"},
+    {"id": "afir-sm6-1", "program_id": "afir", "name": "Instalarea tinerilor fermieri", "code": "sM6.1"},
+    {"id": "afir-sm4-1", "program_id": "afir", "name": "Investiții în exploatații agricole", "code": "sM4.1"},
+    {"id": "afir-sm6-4", "program_id": "afir", "name": "Investiții activități neagricole", "code": "sM6.4"},
+    {"id": "poc-2-2", "program_id": "poc", "name": "Creșterea competitivității IMM", "code": "2.2"},
+    {"id": "por-2-1a", "program_id": "por", "name": "Microîntreprinderi", "code": "2.1A"},
 ]
 
-# AFIR reference prices
-AFIR_PRETURI = [
-    {"categorie": "Utilaje agricole", "subcategorie": "Tractor", "pret_min": 25000, "pret_max": 120000, "unitate": "buc"},
-    {"categorie": "Utilaje agricole", "subcategorie": "Combină", "pret_min": 80000, "pret_max": 350000, "unitate": "buc"},
-    {"categorie": "Utilaje agricole", "subcategorie": "Plug", "pret_min": 3000, "pret_max": 15000, "unitate": "buc"},
-    {"categorie": "Construcții", "subcategorie": "Hală depozitare", "pret_min": 200, "pret_max": 500, "unitate": "mp"},
-    {"categorie": "Construcții", "subcategorie": "Sera/Solar", "pret_min": 50, "pret_max": 150, "unitate": "mp"},
-    {"categorie": "IT", "subcategorie": "Laptop", "pret_min": 2000, "pret_max": 6000, "unitate": "buc"},
-    {"categorie": "IT", "subcategorie": "Server", "pret_min": 5000, "pret_max": 30000, "unitate": "buc"},
-    {"categorie": "Energie", "subcategorie": "Panou fotovoltaic", "pret_min": 200, "pret_max": 500, "unitate": "buc"},
-    {"categorie": "Energie", "subcategorie": "Invertor solar", "pret_min": 1000, "pret_max": 5000, "unitate": "buc"},
-    {"categorie": "Transport", "subcategorie": "Autoutilitară", "pret_min": 20000, "pret_max": 80000, "unitate": "buc"},
+CALLS = [
+    {"id": "pnrr-c9-i1-2025", "measure_id": "pnrr-c9-i1", "name": "Apel C9-I1 / 2025", "code": "C9-I1-2025", "start_date": "2025-01-15", "end_date": "2025-06-30", "status": "activ", "budget": 100000000, "value_min": 50000, "value_max": 500000, "beneficiaries": ["IMM", "Startup"], "region": "Național"},
+    {"id": "pnrr-c10-i1-2025", "measure_id": "pnrr-c10-i1", "name": "Apel Digitalizare / 2025", "code": "C10-I1-2025", "start_date": "2025-03-01", "end_date": "2025-09-30", "status": "activ", "budget": 200000000, "value_min": 100000, "value_max": 2000000, "beneficiaries": ["IMM", "Mari Întreprinderi"], "region": "Național"},
+    {"id": "afir-sm6-4-2025", "measure_id": "afir-sm6-4", "name": "Sesiune sM6.4 / 2025", "code": "sM6.4-2025", "start_date": "2025-01-15", "end_date": "2025-08-15", "status": "activ", "budget": 100000000, "value_min": 50000, "value_max": 200000, "beneficiaries": ["IMM rural", "PFA"], "region": "Rural"},
+    {"id": "poc-2-2-2025", "measure_id": "poc-2-2", "name": "Apel POC 2.2 / 2025", "code": "2.2-2025", "start_date": "2025-05-01", "end_date": "2025-11-30", "status": "activ", "budget": 120000000, "value_min": 200000, "value_max": 1500000, "beneficiaries": ["IMM"], "region": "Național"},
 ]
 
-PROJECT_TYPES = [
-    {"id": "bunuri", "label": "Bunuri"},
-    {"id": "bunuri_montaj", "label": "Bunuri cu montaj"},
-    {"id": "constructii", "label": "Construcții"},
-    {"id": "servicii", "label": "Servicii"},
-    {"id": "mixt", "label": "Mixt (bunuri + servicii + construcții)"},
+APPLICATION_STATES = [
+    "draft", "call_selected", "guide_ready", "preeligibility",
+    "data_collection", "document_collection", "writing",
+    "validation", "ready_for_submission", "submitted",
+    "contracting", "implementation", "monitoring"
+]
+
+APPLICATION_STATE_LABELS = {
+    "draft": "Ciornă", "call_selected": "Sesiune aleasă", "guide_ready": "Ghid disponibil",
+    "preeligibility": "Pre-eligibilitate", "data_collection": "Colectare date",
+    "document_collection": "Colectare documente", "writing": "Redactare",
+    "validation": "Validare", "ready_for_submission": "Pregătit depunere",
+    "submitted": "Depus", "contracting": "Contractare",
+    "implementation": "Implementare", "monitoring": "Monitorizare"
+}
+
+APPLICATION_TRANSITIONS = {
+    "draft": ["call_selected"],
+    "call_selected": ["guide_ready", "draft"],
+    "guide_ready": ["preeligibility", "call_selected"],
+    "preeligibility": ["data_collection", "guide_ready"],
+    "data_collection": ["document_collection", "preeligibility"],
+    "document_collection": ["writing", "data_collection"],
+    "writing": ["validation", "document_collection"],
+    "validation": ["ready_for_submission", "writing"],
+    "ready_for_submission": ["submitted", "validation"],
+    "submitted": ["contracting"],
+    "contracting": ["implementation"],
+    "implementation": ["monitoring"],
+    "monitoring": []
+}
+
+DEFAULT_FOLDER_GROUPS = [
+    {"key": "achizitii", "name": "01_Achiziții", "order": 1},
+    {"key": "depunere", "name": "02_Depunere", "order": 2},
+    {"key": "contractare", "name": "03_Contractare", "order": 3},
+    {"key": "implementare", "name": "04_Implementare", "order": 4},
 ]
 
 DRAFT_TEMPLATES = [
-    {"id": "plan_afaceri", "label": "Plan de afaceri", "categorie": "principal", "sectiuni": ["Rezumat executiv", "Descrierea afacerii", "Analiza pieței", "Strategia de marketing", "Planul operațional", "Resurse umane", "Proiecții financiare"]},
-    {"id": "cerere_finantare", "label": "Cerere de finanțare", "categorie": "principal", "sectiuni": ["Date solicitant", "Descriere proiect", "Obiective", "Activități", "Buget", "Calendar implementare", "Indicatori"]},
-    {"id": "studiu_fezabilitate", "label": "Studiu de fezabilitate", "categorie": "principal", "sectiuni": ["Date generale", "Descriere investiție", "Analiza cererii", "Analiza ofertei", "Capacitate de producție", "Costuri estimative", "Analiza financiară"]},
-    {"id": "declaratie_eligibilitate", "label": "Declarație de eligibilitate", "categorie": "declaratie", "sectiuni": ["Identificare solicitant", "Condiții eligibilitate", "Angajamente", "Semnătură"]},
-    {"id": "declaratie_angajament", "label": "Declarație de angajament", "categorie": "declaratie", "sectiuni": ["Identificare", "Angajamente financiare", "Angajamente operaționale", "Semnătură"]},
-    {"id": "declaratie_neincadrare", "label": "Declarație de neîncadrare în întreprindere în dificultate", "categorie": "declaratie", "sectiuni": ["Date firmă", "Verificare criterii", "Declarație pe proprie răspundere"]},
-    {"id": "memoriu_justificativ", "label": "Memoriu justificativ", "categorie": "principal", "sectiuni": ["Date beneficiar", "Justificarea investiției", "Descriere tehnică", "Deviz estimativ"]},
-    {"id": "deviz_general", "label": "Deviz general estimativ", "categorie": "financiar", "sectiuni": ["Cheltuieli pentru obținere avize", "Cheltuieli pentru proiectare", "Cheltuieli de construcții", "Cheltuieli cu utilaje", "Alte cheltuieli", "Total"]},
+    {"id": "plan_afaceri", "label": "Plan de afaceri", "category": "principal", "sections": ["Rezumat executiv", "Descrierea afacerii", "Analiza pieței", "Strategia de marketing", "Planul operațional", "Resurse umane", "Proiecții financiare"]},
+    {"id": "cerere_finantare", "label": "Cerere de finanțare", "category": "principal", "sections": ["Date solicitant", "Descriere proiect", "Obiective", "Activități", "Buget", "Calendar implementare", "Indicatori"]},
+    {"id": "studiu_fezabilitate", "label": "Studiu de fezabilitate", "category": "principal", "sections": ["Date generale", "Descriere investiție", "Analiza cererii", "Capacitate producție", "Costuri estimative", "Analiza financiară"]},
+    {"id": "declaratie_eligibilitate", "label": "Declarație de eligibilitate", "category": "declaratie", "sections": ["Identificare solicitant", "Condiții eligibilitate", "Angajamente", "Semnătură"]},
+    {"id": "declaratie_angajament", "label": "Declarație de angajament", "category": "declaratie", "sections": ["Identificare", "Angajamente financiare", "Angajamente operaționale", "Semnătură"]},
+    {"id": "memoriu_justificativ", "label": "Memoriu justificativ", "category": "principal", "sections": ["Date beneficiar", "Justificarea investiției", "Descriere tehnică", "Deviz estimativ"]},
+    {"id": "deviz_general", "label": "Deviz general estimativ", "category": "financiar", "sections": ["Cheltuieli avize", "Cheltuieli proiectare", "Cheltuieli construcții", "Cheltuieli utilaje", "Alte cheltuieli", "Total"]},
 ]
 
 
-def get_programs():
-    return PROGRAMS
-
-def get_program(program_id: str):
-    return next((p for p in PROGRAMS if p["id"] == program_id), None)
-
-def get_masura(masura_id: str):
-    for p in PROGRAMS:
-        for m in p["masuri"]:
-            if m["id"] == masura_id:
-                return {**m, "program_id": p["id"], "program_denumire": p["denumire"]}
-    return None
-
-def get_sesiune(sesiune_id: str):
-    for p in PROGRAMS:
-        for m in p["masuri"]:
-            for s in m["sesiuni"]:
-                if s["id"] == sesiune_id:
-                    return {**s, "masura_id": m["id"], "masura_cod": m["cod"], "masura_denumire": m["denumire"], "program_id": p["id"], "program_denumire": p["denumire"]}
-    return None
-
-def search_sicap(query: str):
-    q = query.lower()
-    return [c for c in SICAP_CPV if q in c["descriere"].lower() or q in c["cod"]]
-
-def search_afir_preturi(query: str):
-    q = query.lower()
-    return [p for p in AFIR_PRETURI if q in p["subcategorie"].lower() or q in p["categorie"].lower()]
-
-def get_project_types():
-    return PROJECT_TYPES
-
-def get_draft_templates():
-    return DRAFT_TEMPLATES
-
-def get_draft_template(template_id: str):
-    return next((t for t in DRAFT_TEMPLATES if t["id"] == template_id), None)
+def get_programs(): return PROGRAMS
+def get_measures(program_id=None):
+    if program_id: return [m for m in MEASURES if m["program_id"] == program_id]
+    return MEASURES
+def get_calls(measure_id=None):
+    if measure_id: return [c for c in CALLS if c["measure_id"] == measure_id]
+    return CALLS
+def get_call(call_id):
+    return next((c for c in CALLS if c["id"] == call_id), None)
+def get_templates(): return DRAFT_TEMPLATES
+def get_template(tid):
+    return next((t for t in DRAFT_TEMPLATES if t["id"] == tid), None)
