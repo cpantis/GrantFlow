@@ -22,12 +22,17 @@ def _get_chat(system_message: str) -> LlmChat:
     return chat
 
 
-async def run_orchestrator_check(app: dict, org: dict, db) -> dict:
+async def run_orchestrator_check(app: dict, org: dict, db, user_id: str = None) -> dict:
     """Analyze application state and determine what each agent should do next."""
 
-    # Load custom rules for orchestrator
-    custom_rules = await db.agent_rules.find_one({"agent_id": "orchestrator"}, {"_id": 0})
-    extra_rules = "\n".join(custom_rules.get("reguli", [])) if custom_rules else ""
+    # Load custom rules for all agents
+    all_rules = {}
+    async for rule_doc in db.agent_rules.find({}, {"_id": 0}):
+        aid = rule_doc.get("agent_id")
+        all_rules.setdefault(aid, []).extend(rule_doc.get("reguli", []))
+
+    orchestrator_rules = all_rules.get("orchestrator", [])
+    extra_rules = "\n".join(orchestrator_rules)
 
     guide_assets = app.get("guide_assets", [])
     req_docs = app.get("required_documents", [])
