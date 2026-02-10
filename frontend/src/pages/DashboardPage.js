@@ -153,3 +153,95 @@ export function DashboardPage() {
     </div>
   );
 }
+
+function MoltBot({ activeFirm }) {
+  const [chatHistory, setChatHistory] = useState([]);
+  const [chatMsg, setChatMsg] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+
+  // Auto-greet when firm is available
+  useEffect(() => {
+    if (activeFirm && !initialized) {
+      setInitialized(true);
+      autoGreet();
+    }
+  }, [activeFirm]);
+
+  const autoGreet = async () => {
+    setChatLoading(true);
+    try {
+      const res = await api.post('/agents/navigator/run', {
+        company_id: activeFirm?.id,
+        input_data: {
+          message: `Sunt consultant și lucrez cu firma ${activeFirm?.denumire} (CUI: ${activeFirm?.cui}, CAEN: ${activeFirm?.caen_principal?.cod || 'necunoscut'}, ${activeFirm?.judet || ''}, ${activeFirm?.nr_angajati || 'N/A'} angajați). Ce programe de finanțare europene și naționale sunt disponibile acum pentru această firmă? Analizează profilul firmei și recomandă cele mai potrivite programe active (PNRR, AFIR, POC, POR, Horizon Europe, etc.). Pentru fiecare recomandare, menționează: numele programului, de ce se potrivește, buget estimat, termen.`
+        }
+      });
+      const reply = res.data?.result?.response || res.data?.result || 'Nu am putut genera recomandări.';
+      setChatHistory([{ role: 'assistant', text: reply }]);
+    } catch (e) {
+      setChatHistory([{ role: 'assistant', text: 'Bun venit! Întreabă-mă despre programe de finanțare disponibile pentru firma ta.' }]);
+    }
+    setChatLoading(false);
+  };
+
+  const sendMsg = async () => {
+    if (!chatMsg.trim()) return;
+    const msg = chatMsg;
+    setChatHistory(h => [...h, { role: 'user', text: msg }]);
+    setChatMsg('');
+    setChatLoading(true);
+    try {
+      const res = await api.post('/agents/navigator/run', {
+        company_id: activeFirm?.id,
+        input_data: { message: msg }
+      });
+      const reply = res.data?.result?.response || res.data?.result || '';
+      setChatHistory(h => [...h, { role: 'assistant', text: reply }]);
+    } catch (e) {
+      setChatHistory(h => [...h, { role: 'assistant', text: 'Eroare la generarea răspunsului.' }]);
+    }
+    setChatLoading(false);
+  };
+
+  return (
+    <Card className="bg-card border-border" data-testid="moltbot">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center"><Bot className="w-5 h-5 text-primary" /></div>
+          MoltBot – Consultant Fonduri
+          <Badge className="bg-primary/10 text-primary border-primary/20 rounded-full text-xs ml-1">AI</Badge>
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          {activeFirm ? `Analizez oportunități de finanțare pentru ${activeFirm.denumire}` : 'Selectează o firmă pentru recomandări personalizate'}
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="max-h-[420px] overflow-y-auto space-y-3 scroll-smooth" data-testid="moltbot-chat">
+          {!activeFirm && !chatLoading && chatHistory.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-6">Selectează o firmă din sidebar pentru a primi recomandări de finanțare.</p>
+          )}
+          {chatLoading && chatHistory.length === 0 && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-4"><Loader2 className="w-4 h-4 animate-spin" />Analizez profilul firmei și programele disponibile...</div>
+          )}
+          {chatHistory.map((m, i) => (
+            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              {m.role === 'user' ? (
+                <div className="max-w-[75%] rounded-lg px-4 py-2.5 bg-primary text-primary-foreground text-sm">{m.text}</div>
+              ) : (
+                <div className="max-w-[95%] rounded-lg px-4 py-3 bg-secondary/50 border border-border"><AiMessage text={m.text} /></div>
+              )}
+            </div>
+          ))}
+          {chatLoading && chatHistory.length > 0 && (
+            <div className="flex justify-start"><div className="bg-secondary/50 rounded-lg px-3 py-2 text-sm text-muted-foreground animate-pulse">Se generează...</div></div>
+          )}
+        </div>
+        <div className="flex gap-2 pt-1 border-t">
+          <Input value={chatMsg} onChange={(e) => setChatMsg(e.target.value)} placeholder="Întreabă despre programe, eligibilitate, termene..." onKeyDown={(e) => e.key === 'Enter' && sendMsg()} disabled={chatLoading} data-testid="moltbot-input" />
+          <Button onClick={sendMsg} disabled={chatLoading || !chatMsg.trim()} data-testid="moltbot-send"><Send className="w-4 h-4" /></Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
