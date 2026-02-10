@@ -1,0 +1,16 @@
+FACTURA FISCALA
+Nr: FV-2025-0042
+Data: 15.01.2026
+Furnizor: SC TECH DISTRIBUTOR SRL
+CUI Furnizor: 12345678
+Client: Eb Consult S.R.L.
+CUI Client: 3994290
+
+Produse:
+1. Laptop Dell Latitude 5540 - 3 buc x 4500 RON = 13500 RON
+2. Monitor Dell 27" - 3 buc x 1200 RON = 3600 RON
+3. Licenta Microsoft 365 - 3 buc x 800 RON = 2400 RON
+
+Subtotal: 19500 RON
+TVA 19%: 3705 RON
+Total: 23205 RON
