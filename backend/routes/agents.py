@@ -269,34 +269,22 @@ async def run_agent(agent_id: str, req: RunAgentRequest, current_user: dict = De
 
     # --- VALIDATOR ---
     elif agent_id == "validator":
-        if not app:
+        if not req.application_id:
             raise HTTPException(400, "application_id necesar")
         from services.ai_service import validate_coherence
-        docs = app.get("documents", [])
-        req_docs = app.get("required_documents", [])
-        ai_result = await validate_coherence(
-            documents=[{"filename": d.get("filename"), "folder": d.get("folder_group"), "status": d.get("status"), "ocr": d.get("ocr_status")} for d in docs],
-            project_data={"title": app["title"], "program": app.get("program_name"), "firma": (org or {}).get("denumire"), "buget": app.get("budget_estimated"), "docs_uploaded": len(docs), "docs_required": len(req_docs), "docs_missing": len([r for r in req_docs if r.get("status") == "missing"]), "reguli_agent": rules_text}
-        )
+        ai_result = await validate_coherence([], {}, full_context=full_ctx, extra_rules=rules_text)
         report = {"id": str(uuid.uuid4()), "type": "validation", "application_id": req.application_id, "result": ai_result.get("result", ""), "created_at": datetime.now(timezone.utc).isoformat()}
         await db.compliance_reports.insert_one(report)
         result = {"report_id": report["id"], "preview": ai_result.get("result", "")[:300]}
 
     # --- EVALUATOR (grilă conformitate) ---
     elif agent_id == "evaluator":
-        if not app:
+        if not req.application_id:
             raise HTTPException(400, "application_id necesar")
         from services.ai_service import validate_coherence
-        docs = app.get("documents", [])
-        req_docs = app.get("required_documents", [])
-        drafts = app.get("drafts", [])
-        guides = [g.get("filename") for g in app.get("guide_assets", [])]
-        ai_result = await validate_coherence(
-            documents=[{"name": r.get("official_name"), "status": r.get("status"), "required": r.get("required")} for r in req_docs],
-            project_data={"title": app["title"], "program": app.get("program_name"), "buget": app.get("budget_estimated"),
-                          "tip_proiect": app.get("tip_proiect"), "ghiduri": guides, "drafturi": len(drafts), "documente": len(docs),
-                          "checklist_frozen": app.get("checklist_frozen"), "instrucțiune": "Evaluează conform GRILEI DE CONFORMITATE: verifică completitudinea dosarului, documente obligatorii, coerență date, semnături, conformitate cu ghidul.",
-                          "reguli_agent": rules_text}
+        ai_result = await validate_coherence([], {},
+            full_context={**full_ctx, "instrucțiune_specială": "Evaluează conform GRILEI DE CONFORMITATE din ghid. Verifică completitudinea dosarului, documente obligatorii, coerență date, semnături. Dă scoring per criteriu."},
+            extra_rules=rules_text
         )
         report = {"id": str(uuid.uuid4()), "type": "conformity_grid", "application_id": req.application_id, "result": ai_result.get("result", ""), "created_at": datetime.now(timezone.utc).isoformat()}
         await db.compliance_reports.insert_one(report)
@@ -308,10 +296,7 @@ async def run_agent(agent_id: str, req: RunAgentRequest, current_user: dict = De
         if not message:
             raise HTTPException(400, "message necesar")
         from services.ai_service import chat_navigator
-        context = {}
-        if app:
-            context = {"title": app.get("title"), "status": app.get("status"), "program": app.get("program_name"), "call": app.get("call_name"), "buget": app.get("budget_estimated")}
-        ai_result = await chat_navigator(f"{message}\n\nReguli: {rules_text}" if rules_text else message, context)
+        ai_result = await chat_navigator(message, {}, full_context=full_ctx, extra_rules=rules_text)
         result = {"response": ai_result.get("result", ""), "success": ai_result.get("success")}
 
     # --- ORCHESTRATOR ---
