@@ -65,10 +65,20 @@ export function DosareDetailPage() {
     setTransitioning(false);
   };
 
+  const [guideProcessing, setGuideProcessing] = useState(false);
+  const [guideActions, setGuideActions] = useState([]);
+
   const uploadGuide = async (e) => {
     if (!e.target.files[0]) return;
+    setGuideProcessing(true);
+    setGuideActions([]);
     const fd = new FormData(); fd.append('file', e.target.files[0]); fd.append('tip', 'ghid');
-    try { await api.post(`/v2/applications/${id}/guide`, fd, { headers: { 'Content-Type': 'multipart/form-data' } }); load(); } catch (err) { console.error(err); }
+    try {
+      const res = await api.post(`/v2/applications/${id}/guide`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setGuideActions(res.data.agent_actions || []);
+      load();
+    } catch (err) { console.error(err); }
+    setGuideProcessing(false);
   };
 
   const addRequiredDoc = async () => {
