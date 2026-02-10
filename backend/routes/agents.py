@@ -176,6 +176,12 @@ async def run_agent(agent_id: str, req: RunAgentRequest, current_user: dict = De
     run_id = str(uuid.uuid4())
     result = {}
 
+    # Build full project context (shared by all agents)
+    from services.context_builder import build_full_context
+    full_ctx = {}
+    if req.application_id:
+        full_ctx = await build_full_context(req.application_id, db)
+
     # --- COLECTOR ---
     if agent_id == "colector":
         if not org:
