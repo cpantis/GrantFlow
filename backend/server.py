@@ -34,6 +34,7 @@ from routes.admin import router as admin_router, set_db as admin_set_db
 from routes.funding import router as funding_router, set_db as funding_set_db
 from routes.agents import router as agents_router, set_db as agents_set_db
 from routes.integrations import router as integrations_router, set_db as integrations_set_db
+from routes.applications import router as apps_router, set_db as apps_set_db
 from middleware.auth_middleware import set_rbac_db
 
 # Set DB references
