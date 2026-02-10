@@ -57,38 +57,77 @@ async def list_templates():
 async def get_states():
     return {"states": APPLICATION_STATE_LABELS, "transitions": APPLICATION_TRANSITIONS, "order": APPLICATION_STATES}
 
-# --- Applications (Dosare) ---
+# --- Applications (Dosare/Proiecte) ---
 class CreateApplicationRequest(BaseModel):
     company_id: str
-    call_id: str
+    call_id: Optional[str] = None
     title: str
     description: Optional[str] = ""
+    custom_program: Optional[str] = None
+    custom_measure: Optional[str] = None
+    custom_session: Optional[str] = None
+    custom_links: Optional[List[str]] = []
 
 class TransitionRequest(BaseModel):
     new_state: str
     reason: Optional[str] = ""
 
+class GenerateDescriptionRequest(BaseModel):
+    title: str
+    call_id: Optional[str] = None
+    custom_session: Optional[str] = None
+
+@router.post("/applications/generate-description")
+async def generate_description(req: GenerateDescriptionRequest, current_user: dict = Depends(get_current_user)):
+    """AI generates a short description based on title and session info."""
+    call = get_call(req.call_id) if req.call_id else None
+    context = f"Titlu proiect: {req.title}"
+    if call:
+        context += f"\nSesiune: {call['name']}, Buget: {call.get('value_min')}-{call.get('value_max')} RON, Beneficiari: {', '.join(call.get('beneficiaries', []))}"
+    if req.custom_session:
+        context += f"\nSesiune custom: {req.custom_session}"
+
+    from services.ai_service import chat_navigator
+    result = await chat_navigator(
+        f"Generează o descriere scurtă (2-3 propoziții) pentru un proiect de finanțare cu aceste date:\n{context}\nDescriere concisă, profesională, în limba română. Doar textul, fără formatare.",
+        {}
+    )
+    return {"description": result.get("result", "")}
+
 @router.post("/applications")
 async def create_application(req: CreateApplicationRequest, current_user: dict = Depends(get_current_user)):
-    call = get_call(req.call_id)
-    if not call: raise HTTPException(400, "Sesiune invalidă")
+    call = get_call(req.call_id) if req.call_id else None
     org = await db.organizations.find_one({"id": req.company_id}, {"_id": 0})
     if not org: raise HTTPException(404, "Firmă negăsită")
 
     app_id = str(uuid.uuid4())
-    m = next((m for m in get_measures() if m["id"] == call["measure_id"]), {})
-    p = next((p for p in get_programs() if p["id"] == m.get("program_id")), {})
+
+    if call:
+        m = next((m for m in get_measures() if m["id"] == call["measure_id"]), {})
+        p = next((p for p in get_programs() if p["id"] == m.get("program_id")), {})
+        call_name = call["name"]
+        call_code = call.get("code")
+        measure_name = m.get("name")
+        measure_code = m.get("code")
+        program_name = p.get("name")
+    else:
+        call_name = req.custom_session or "Sesiune custom"
+        call_code = ""
+        measure_name = req.custom_measure or ""
+        measure_code = ""
+        program_name = req.custom_program or ""
 
     application = {
         "id": app_id, "title": req.title, "description": req.description,
         "company_id": req.company_id, "company_name": org["denumire"], "company_cui": org.get("cui"),
-        "call_id": req.call_id, "call_name": call["name"], "call_code": call.get("code"),
-        "measure_name": m.get("name"), "measure_code": m.get("code"),
-        "program_name": p.get("name"),
+        "call_id": req.call_id, "call_name": call_name, "call_code": call_code,
+        "measure_name": measure_name, "measure_code": measure_code,
+        "program_name": program_name,
+        "custom_links": req.custom_links or [],
         "status": "call_selected", "status_label": APPLICATION_STATE_LABELS["call_selected"],
         "history": [
-            {"from": None, "to": "draft", "at": datetime.now(timezone.utc).isoformat(), "by": current_user["user_id"], "reason": "Dosar creat"},
-            {"from": "draft", "to": "call_selected", "at": datetime.now(timezone.utc).isoformat(), "by": current_user["user_id"], "reason": f"Sesiune selectată: {call['name']}"}
+            {"from": None, "to": "draft", "at": datetime.now(timezone.utc).isoformat(), "by": current_user["user_id"], "reason": "Proiect creat"},
+            {"from": "draft", "to": "call_selected", "at": datetime.now(timezone.utc).isoformat(), "by": current_user["user_id"], "reason": f"Sesiune: {call_name}"}
         ],
         "guide_assets": [], "required_documents": [], "checklist_frozen": False,
         "folder_groups": DEFAULT_FOLDER_GROUPS,
@@ -99,7 +138,7 @@ async def create_application(req: CreateApplicationRequest, current_user: dict =
         "created_by": current_user["user_id"]
     }
     await db.applications.insert_one(application)
-    await db.audit_log.insert_one({"id": str(uuid.uuid4()), "action": "application.created", "entity_type": "application", "entity_id": app_id, "user_id": current_user["user_id"], "details": {"title": req.title, "call": call["name"]}, "timestamp": datetime.now(timezone.utc).isoformat()})
+    await db.audit_log.insert_one({"id": str(uuid.uuid4()), "action": "application.created", "entity_type": "application", "entity_id": app_id, "user_id": current_user["user_id"], "details": {"title": req.title, "call": call_name}, "timestamp": datetime.now(timezone.utc).isoformat()})
     application.pop("_id", None)
     return application
 
