@@ -221,8 +221,8 @@ function MoltBot({ activeFirm }) {
           )}
         </div>
         <div className="flex gap-2 pt-1 border-t">
-          <Input value={chatMsg} onChange={(e) => setChatMsg(e.target.value)} placeholder="Întreabă despre programe, eligibilitate, termene..." onKeyDown={(e) => e.key === 'Enter' && sendMsg()} disabled={chatLoading} data-testid="moltbot-input" />
-          <Button onClick={sendMsg} disabled={chatLoading || !chatMsg.trim()} data-testid="moltbot-send"><Send className="w-4 h-4" /></Button>
+          <textarea value={chatMsg} onChange={(e) => setChatMsg(e.target.value)} placeholder="Întreabă despre programe, eligibilitate, termene..." onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }} disabled={chatLoading} data-testid="moltbot-input" className="flex-1 min-h-[60px] max-h-[120px] rounded-md border px-3 py-2 text-sm resize-y bg-background" />
+          <Button onClick={sendMsg} disabled={chatLoading || !chatMsg.trim()} data-testid="moltbot-send" className="self-end"><Send className="w-4 h-4" /></Button>
         </div>
       </CardContent>
     </Card>
