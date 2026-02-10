@@ -45,11 +45,11 @@ export function ProjectWritingPage() {
       try {
         const [pRes, progsRes, templRes, typesRes, legRes, draftsRes] = await Promise.all([
           api.get(`/projects/${id}`),
-          api.get('/funding/programs'),
-          api.get('/funding/templates'),
-          api.get('/funding/project-types'),
-          api.get(`/funding/legislation/${id}`).catch(() => ({ data: [] })),
-          api.get(`/funding/drafts/${id}`).catch(() => ({ data: [] })),
+          api.get('/v2/programs'),
+          api.get('/v2/templates'),
+          api.get('/v2/calls').then(r => ({data: []})).catch(() => ({ data: [] })),
+          api.get(`/v2/applications/${id}`).then(r => ({data: r.data?.guide_assets || []})).catch(() => ({ data: [] })),
+          api.get(`/v2/applications/${id}/drafts`).catch(() => ({ data: [] })),
         ]);
         setProject(pRes.data);
         setPrograms(progsRes.data || []);
