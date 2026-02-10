@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 const navItems = [
   { path: '/dashboard', label: 'Panou', icon: LayoutDashboard },
   { path: '/organizations', label: 'Firme', icon: Building2 },
-  { path: '/projects', label: 'Proiecte', icon: FolderKanban },
+  { path: '/dosare', label: 'Dosare', icon: FolderKanban },
   { path: '/documents', label: 'Documente', icon: FileText },
   { path: '/agents', label: 'Agenți AI', icon: Bot },
   { path: '/admin', label: 'Admin', icon: Settings },
