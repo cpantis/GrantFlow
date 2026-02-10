@@ -337,7 +337,11 @@ class GenerateDraftRequest(BaseModel):
 async def generate_draft(app_id: str, req: GenerateDraftRequest, current_user: dict = Depends(get_current_user)):
     app = await db.applications.find_one({"id": app_id}, {"_id": 0})
     if not app: raise HTTPException(404)
+    # Try standard template first, then custom templates
     tpl = get_template(req.template_id)
+    if not tpl:
+        custom_tpls = app.get("custom_templates", [])
+        tpl = next((t for t in custom_tpls if t["id"] == req.template_id), None)
     if not tpl: raise HTTPException(404, "Template negăsit")
     org = await db.organizations.find_one({"id": app.get("company_id")}, {"_id": 0})
     company_ctx = app.get("company_context") or {k: (org or {}).get(k) for k in ["denumire", "cui", "adresa", "judet", "forma_juridica", "nr_reg_com", "caen_principal", "nr_angajati", "data_infiintare"]}
