@@ -157,6 +157,29 @@ export function DosareDetailPage() {
             <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Documente</p><p className="font-bold mt-1">{docs.length} / {reqDocs.length} cerute</p></CardContent></Card>
             <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Drafturi</p><p className="font-bold mt-1">{drafts.length} generate</p></CardContent></Card>
           </div>
+          {app.description && <Card className="bg-card border-border"><CardContent className="p-5"><p className="text-sm text-muted-foreground mb-1">Descriere</p><p>{app.description}</p></CardContent></Card>}
+          {app.company_context && (
+            <Card className="bg-card border-border"><CardContent className="p-5">
+              <p className="text-sm text-muted-foreground mb-2">Context firmă activă</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                <div><span className="text-muted-foreground">Firmă:</span> <strong>{app.company_context.denumire}</strong></div>
+                <div><span className="text-muted-foreground">CUI:</span> <strong>{app.company_context.cui}</strong></div>
+                <div><span className="text-muted-foreground">CAEN:</span> <strong>{app.company_context.caen_principal?.cod || 'N/A'}</strong></div>
+                <div><span className="text-muted-foreground">Județ:</span> <strong>{app.company_context.judet || 'N/A'}</strong></div>
+              </div>
+            </CardContent></Card>
+          )}
+          {app.extracted_data?.scraped_info && (
+            <Card className="bg-card border-border"><CardHeader><CardTitle className="text-base flex items-center gap-2"><Bot className="w-4 h-4 text-primary" />Date extrase din link-uri (Agent Colector)</CardTitle></CardHeader>
+              <CardContent><AiMessage text={app.extracted_data.scraped_info} /></CardContent>
+            </Card>
+          )}
+          {app.custom_links?.length > 0 && (
+            <Card className="bg-card border-border"><CardContent className="p-5">
+              <p className="text-sm text-muted-foreground mb-2">Link-uri sursă</p>
+              {app.custom_links.map((l, i) => <a key={i} href={l} target="_blank" rel="noopener noreferrer" className="block text-sm text-primary hover:underline truncate">{l}</a>)}
+            </CardContent></Card>
+          )}
         </TabsContent>
 
         {/* ORCHESTRATOR */}
