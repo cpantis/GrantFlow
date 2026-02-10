@@ -754,5 +754,5 @@ async def orchestrator_check(app_id: str, current_user: dict = Depends(get_curre
     if not app: raise HTTPException(404, "Dosar negăsit")
     org = await db.organizations.find_one({"id": app.get("company_id")}, {"_id": 0})
     if not org: raise HTTPException(404, "Firmă negăsită")
-    result = await run_orchestrator_check(app, org, db)
+    result = await run_orchestrator_check(app, org, db, user_id=current_user["user_id"])
     return result
