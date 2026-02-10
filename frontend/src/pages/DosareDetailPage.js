@@ -297,16 +297,67 @@ export function DosareDetailPage() {
 
         <TabsContent value="guide" className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-heading text-lg font-bold">Ghid solicitant & Anexe</h2>
-            <div><input type="file" id="guide-upload" className="hidden" onChange={uploadGuide} /><Button variant="outline" onClick={() => document.getElementById('guide-upload').click()} data-testid="upload-guide-btn"><Upload className="w-4 h-4 mr-2" />Încarcă ghid / anexă</Button></div>
+            <div>
+              <h2 className="font-heading text-lg font-bold">Legislație – Ghid solicitant & Anexe</h2>
+              <p className="text-sm text-muted-foreground">La încărcare, agenții parsează documentul, extrag criterii, documente cerute și actualizează dosarul automat.</p>
+            </div>
+            <div>
+              <input type="file" id="guide-upload" className="hidden" onChange={uploadGuide} accept=".pdf,.doc,.docx,.txt" />
+              <Button variant="outline" onClick={() => document.getElementById('guide-upload').click()} disabled={guideProcessing} data-testid="upload-guide-btn">
+                {guideProcessing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Agenții procesează...</> : <><Upload className="w-4 h-4 mr-2" />Încarcă ghid / anexă</>}
+              </Button>
+            </div>
           </div>
-          {(app.guide_assets || []).length === 0 ? <p className="text-muted-foreground">Niciun ghid încărcat. Încarcă ghidul solicitantului pentru a continua.</p> : (
+
+          {/* Agent actions after upload */}
+          {guideActions.length > 0 && (
+            <Card className="bg-green-50 border-green-200"><CardContent className="p-4 space-y-1.5">
+              <p className="font-semibold text-sm text-green-700 flex items-center gap-2"><Zap className="w-4 h-4" />Acțiuni efectuate de agenți:</p>
+              {guideActions.map((a, i) => (
+                <div key={i} className="flex items-start gap-2 text-sm text-green-800">
+                  <CheckCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" /><span>{a}</span>
+                </div>
+              ))}
+            </CardContent></Card>
+          )}
+
+          {(app.guide_assets || []).length === 0 ? (
+            <Card className="bg-card border-border"><CardContent className="p-10 text-center">
+              <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+              <p className="font-medium">Niciun ghid încărcat</p>
+              <p className="text-sm text-muted-foreground mt-1">Încarcă ghidul solicitantului pentru ca agenții să extragă automat criterii, documente cerute și grila de conformitate.</p>
+            </CardContent></Card>
+          ) : (
             <div className="space-y-2">{app.guide_assets.map(g => (
-              <Card key={g.id} className="bg-card border-border"><CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3"><BookOpen className="w-5 h-5 text-primary" /><div><p className="font-medium">{g.filename}</p><p className="text-xs text-muted-foreground">{g.tip} &middot; {(g.file_size / 1024).toFixed(0)} KB</p></div></div>
-                <Badge variant="secondary">{g.tip}</Badge>
+              <Card key={g.id} className="bg-card border-border"><CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <BookOpen className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="font-medium">{g.filename}</p>
+                      <p className="text-xs text-muted-foreground">{g.tip} &middot; {(g.file_size / 1024).toFixed(0)} KB</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {g.extraction_status === 'completed' && <Badge className="bg-green-50 text-green-600 text-xs"><CheckCircle className="w-3 h-3 mr-1" />Procesat</Badge>}
+                    {g.extraction_status === 'error' && <Badge className="bg-red-50 text-red-500 text-xs"><AlertTriangle className="w-3 h-3 mr-1" />Eroare</Badge>}
+                    <Badge variant="secondary">{g.tip}</Badge>
+                  </div>
+                </div>
+                {g.extracted_content?.rezumat && (
+                  <p className="text-sm text-muted-foreground mt-2 border-t pt-2">{g.extracted_content.rezumat}</p>
+                )}
               </CardContent></Card>
             ))}</div>
+          )}
+
+          {/* Show extracted eligibility criteria if available */}
+          {app.criterii_eligibilitate_ghid?.length > 0 && (
+            <Card className="bg-card border-border"><CardHeader><CardTitle className="text-base">Criterii eligibilitate (din ghid)</CardTitle></CardHeader>
+              <CardContent><ul className="space-y-1">{app.criterii_eligibilitate_ghid.map((c, i) => (
+                <li key={i} className="text-sm flex items-start gap-2"><CheckCircle className="w-3.5 h-3.5 mt-0.5 text-primary flex-shrink-0" />{typeof c === 'string' ? c : c.criteriu || JSON.stringify(c)}</li>
+              ))}</ul></CardContent>
+            </Card>
           )}
         </TabsContent>
 
