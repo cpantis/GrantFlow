@@ -53,6 +53,38 @@ async def get_call_detail(call_id: str):
 async def list_templates():
     return get_templates()
 
+# SICAP / AFIR search
+SICAP_CPV = [
+    {"cod": "30200000-1", "descriere": "Echipamente informatice", "pret_referinta_min": 500, "pret_referinta_max": 15000},
+    {"cod": "30213100-6", "descriere": "Laptopuri", "pret_referinta_min": 2000, "pret_referinta_max": 8000},
+    {"cod": "48000000-8", "descriere": "Software și sisteme informatice", "pret_referinta_min": 1000, "pret_referinta_max": 50000},
+    {"cod": "72000000-5", "descriere": "Servicii IT", "pret_referinta_min": 5000, "pret_referinta_max": 200000},
+    {"cod": "45000000-7", "descriere": "Lucrări de construcții", "pret_referinta_min": 50000, "pret_referinta_max": 5000000},
+    {"cod": "42000000-6", "descriere": "Mașini industriale", "pret_referinta_min": 10000, "pret_referinta_max": 500000},
+    {"cod": "09331200-0", "descriere": "Module solare fotovoltaice", "pret_referinta_min": 10000, "pret_referinta_max": 200000},
+    {"cod": "34100000-8", "descriere": "Autovehicule", "pret_referinta_min": 15000, "pret_referinta_max": 150000},
+    {"cod": "39100000-3", "descriere": "Mobilier", "pret_referinta_min": 500, "pret_referinta_max": 30000},
+]
+AFIR_PRETURI = [
+    {"categorie": "Utilaje", "subcategorie": "Tractor", "pret_min": 25000, "pret_max": 120000, "unitate": "buc"},
+    {"categorie": "Utilaje", "subcategorie": "Combină", "pret_min": 80000, "pret_max": 350000, "unitate": "buc"},
+    {"categorie": "Construcții", "subcategorie": "Hală depozitare", "pret_min": 200, "pret_max": 500, "unitate": "mp"},
+    {"categorie": "IT", "subcategorie": "Laptop", "pret_min": 2000, "pret_max": 6000, "unitate": "buc"},
+    {"categorie": "IT", "subcategorie": "Server", "pret_min": 5000, "pret_max": 30000, "unitate": "buc"},
+    {"categorie": "Energie", "subcategorie": "Panou fotovoltaic", "pret_min": 200, "pret_max": 500, "unitate": "buc"},
+    {"categorie": "Transport", "subcategorie": "Autoutilitară", "pret_min": 20000, "pret_max": 80000, "unitate": "buc"},
+]
+
+@router.get("/sicap/search")
+async def sicap_search(q: str):
+    if len(q) < 2: return []
+    return [c for c in SICAP_CPV if q.lower() in c["descriere"].lower() or q.lower() in c["cod"]]
+
+@router.get("/afir/preturi")
+async def afir_search(q: str):
+    if len(q) < 2: return []
+    return [p for p in AFIR_PRETURI if q.lower() in p["subcategorie"].lower() or q.lower() in p["categorie"].lower()]
+
 @router.get("/states")
 async def get_states():
     return {"states": APPLICATION_STATE_LABELS, "transitions": APPLICATION_TRANSITIONS, "order": APPLICATION_STATES}
