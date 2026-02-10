@@ -5,8 +5,10 @@ import { useFirm } from '@/contexts/FirmContext';
 import api from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Building2, FolderKanban, FileText, Users, ArrowUpRight, Clock, TrendingUp, AlertTriangle, Mail, CheckCircle } from 'lucide-react';
+import { Building2, FolderKanban, FileText, Users, ArrowUpRight, Clock, TrendingUp, AlertTriangle, Mail, CheckCircle, Bot, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { AiMessage } from '@/components/shared/AiMessage';
 
 const STATE_COLORS = {
   draft: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/20',
