@@ -319,9 +319,11 @@ async def generate_draft(app_id: str, req: GenerateDraftRequest, current_user: d
     tpl = get_template(req.template_id)
     if not tpl: raise HTTPException(404, "Template negăsit")
     org = await db.organizations.find_one({"id": app.get("company_id")}, {"_id": 0})
+    company_ctx = app.get("company_context") or {k: (org or {}).get(k) for k in ["denumire", "cui", "adresa", "judet", "forma_juridica", "nr_reg_com", "caen_principal", "nr_angajati", "data_infiintare"]}
     data = {
-        "dosar": {"title": app["title"], "call": app.get("call_name"), "program": app.get("program_name"), "budget": app.get("budget_estimated")},
-        "firma": {k: (org or {}).get(k) for k in ["denumire", "cui", "adresa", "judet", "forma_juridica", "nr_reg_com", "caen_principal", "nr_angajati", "data_infiintare"]}
+        "dosar": {"title": app["title"], "call": app.get("call_name"), "program": app.get("program_name"), "measure": app.get("measure_name"), "budget": app.get("budget_estimated"), "description": app.get("description")},
+        "firma": company_ctx,
+        "sesiune_extras": app.get("extracted_data", {}).get("scraped_info", "")
     }
     section = req.section or ", ".join(tpl["sections"])
     # Get custom rules for redactor agent
