@@ -46,8 +46,14 @@ export function DosareDetailPage() {
   const load = async () => {
     try {
       const [aRes, tRes] = await Promise.all([api.get(`/v2/applications/${id}`), api.get('/v2/templates')]);
-      setApp(aRes.data);
+      const a = aRes.data;
+      setApp(a);
       setTemplates(tRes.data || []);
+      // Init config from app data
+      if (a) {
+        setConfig({ tip_proiect: a.tip_proiect || '', locatie: a.locatie_implementare || '', judet: a.judet_implementare || '', tema: a.tema_proiect || '' });
+        setAchizitii(a.achizitii || []);
+      }
     } catch (e) { console.error(e); }
     setLoading(false);
   };
