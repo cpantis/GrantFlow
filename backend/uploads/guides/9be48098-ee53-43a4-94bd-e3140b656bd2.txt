@@ -1,0 +1,58 @@
+GHID SOLICITANT
+Program: PNRR - Componenta C10 Investiția I1
+Măsura: Digitalizarea IMM-urilor
+Sesiune: Apel nr. 1/2025 - Digitalizare
+
+Buget total alocat: 200.000.000 EUR
+Valoare minimă proiect: 100.000 EUR  
+Valoare maximă proiect: 2.000.000 EUR
+
+Beneficiari eligibili:
+- IMM-uri (micro, mici, mijlocii)
+- Întreprinderi cu minim 2 ani de activitate
+- Firme cu sediul în România
+- Cifra de afaceri minim 50.000 EUR/an
+
+Criterii de eligibilitate:
+1. Solicitantul trebuie să fie înregistrat ca persoană juridică în România
+2. Să aibă minim 2 exerciții financiare încheiate
+3. Să nu fie în dificultate financiară (conform Regulamentului UE)
+4. Să nu aibă datorii restante la bugetul de stat
+5. Codul CAEN principal sau secundar să fie eligibil conform listei din Anexa 1
+6. Proiectul să se implementeze pe teritoriul României
+7. Contribuția proprie minim 10% din valoarea eligibilă
+
+Documente obligatorii la depunere:
+1. Cerere de finanțare (Formularul A)
+2. Plan de afaceri
+3. Declarație de eligibilitate (Anexa 2)
+4. Declarație de angajament (Anexa 3)  
+5. Declarație privind neîncadrarea în dificultate (Anexa 4)
+6. Certificat constatator ONRC (nu mai vechi de 30 zile)
+7. Bilanțuri ultimele 2 exerciții financiare
+8. Oferte de preț pentru achizițiile propuse (minim 3 oferte)
+9. CV-ul managerului de proiect
+10. Extras de carte funciară (dacă e cazul)
+
+Grila de conformitate:
+- Completitudinea cererii de finanțare: 10 puncte
+- Calitatea planului de afaceri: 25 puncte
+- Buget realist și fundamentat: 15 puncte
+- Impact asupra digitalizării: 20 puncte
+- Experiența echipei: 10 puncte
+- Sustenabilitatea proiectului: 20 puncte
+
+Activități eligibile:
+- Achiziție hardware (servere, stații de lucru, echipamente rețea)
+- Achiziție software (ERP, CRM, e-commerce, automatizare)
+- Servicii de implementare și configurare
+- Instruirea personalului
+- Consultanță management proiect
+
+Cheltuieli eligibile:
+- Echipamente IT și software: max 60% din buget
+- Servicii de consultanță: max 10% din buget
+- Management de proiect: max 5% din buget
+- Publicitate și informare: max 2% din buget
+
+Termen depunere: 01.03.2025 - 30.09.2025
