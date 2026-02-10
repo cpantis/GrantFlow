@@ -527,6 +527,7 @@ export function DosareDetailPage() {
                         {d.ocr_status === 'needs_review' && <Badge className="text-xs rounded-full bg-amber-50 text-amber-600"><AlertTriangle className="w-3 h-3 mr-1" />Revizuire</Badge>}
                         {d.ocr_status === 'processing' && <Badge className="text-xs rounded-full bg-blue-50 text-blue-600"><Loader2 className="w-3 h-3 mr-1 animate-spin" />OCR...</Badge>}
                         <Badge className={`text-xs rounded-full ${d.status === 'uploaded' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>{d.status}</Badge>
+                        <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10 h-7 w-7 p-0" onClick={async () => { try { await api.delete(`/v2/applications/${id}/documents/${d.id}`); load(); } catch(e) { console.error(e); } }} data-testid={`delete-doc-${d.id}`}><X className="w-3.5 h-3.5" /></Button>
                       </div>
                     </div>
                     {d.ocr_data?.extracted_fields && Object.keys(d.ocr_data.extracted_fields).length > 0 && (
