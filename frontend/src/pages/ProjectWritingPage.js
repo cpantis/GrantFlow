@@ -107,7 +107,7 @@ export function ProjectWritingPage() {
   const evaluateConformity = async () => {
     setEvaluating(true);
     try {
-      const res = await api.post('/funding/evaluate-conformity', { project_id: id });
+      const res = await api.post(`/v2/applications/${id}/evaluate`);
       setEvalReport(res.data);
     } catch (e) { console.error(e); }
     setEvaluating(false);
