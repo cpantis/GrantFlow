@@ -70,7 +70,7 @@ export function AgentsPage() {
         <p className="text-muted-foreground mt-1">Configurează regulile fiecărui agent. Regulile custom se adaugă peste cele implicite.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="space-y-4">
         {agents.map((agent) => {
           const Icon = ICON_MAP[agent.icon] || Bot;
           const typeColor = TYPE_COLORS[agent.tip] || TYPE_COLORS.coordonare;
