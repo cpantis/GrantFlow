@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AiMessage } from '@/components/shared/AiMessage';
 import {
   ArrowLeft, ArrowRight, Upload, FileText, Shield, Bot, CheckCircle, XCircle,
-  FolderOpen, BookOpen, PenTool, Zap, Download, Loader2, Plus, AlertTriangle, Package
+  FolderOpen, BookOpen, PenTool, Zap, Download, Loader2, Plus, AlertTriangle, Package,
+  Settings, ShoppingCart, MapPin, Search, Send
 } from 'lucide-react';
 
 const STATES = ["draft","call_selected","guide_ready","preeligibility","data_collection","document_collection","writing","validation","ready_for_submission","submitted","contracting","implementation","monitoring"];
