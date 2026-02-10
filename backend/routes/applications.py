@@ -488,12 +488,81 @@ async def evaluate_application(app_id: str, current_user: dict = Depends(get_cur
     app = await db.applications.find_one({"id": app_id}, {"_id": 0})
     if not app: raise HTTPException(404)
     org = await db.organizations.find_one({"id": app.get("company_id")}, {"_id": 0})
-    result = await check_eligibility(
-        firm_data={k: (org or {}).get(k) for k in ["denumire", "cui", "caen_principal", "nr_angajati", "data_infiintare", "stare"]},
-        program_info={"call": app.get("call_name"), "program": app.get("program_name"), "budget_max": app.get("budget_estimated")}
-    )
-    report = {"id": str(uuid.uuid4()), "type": "evaluation", "application_id": app_id, "result": result.get("result", ""), "created_at": datetime.now(timezone.utc).isoformat()}
+
+    # Build complete firm data
+    firm_data = {}
+    if org:
+        firm_data = {
+            "denumire": org.get("denumire"),
+            "cui": org.get("cui"),
+            "forma_juridica": org.get("forma_juridica"),
+            "caen_principal": org.get("caen_principal"),
+            "caen_secundare": org.get("caen_secundare", []),
+            "nr_angajati": org.get("nr_angajati"),
+            "data_infiintare": org.get("data_infiintare"),
+            "stare": org.get("stare"),
+            "judet": org.get("judet"),
+            "adresa": org.get("adresa"),
+            "capital_social": org.get("capital_social"),
+            "date_financiare": org.get("date_financiare") or org.get("date_financiare_ocr"),
+        }
+
+    # Build complete program/call info
+    call = get_call(app.get("call_id", ""))
+    guide_files = [g.get("filename") for g in app.get("guide_assets", [])]
+    extracted_info = app.get("extracted_data", {}).get("scraped_info", "")
+
+    program_info = {
+        "program": app.get("program_name") or "Neprecizat",
+        "masura": app.get("measure_name") or app.get("measure_code") or "",
+        "sesiune": app.get("call_name") or "",
+        "tip_proiect": app.get("tip_proiect") or "Nesetat",
+        "locatie_implementare": app.get("locatie_implementare") or app.get("judet_implementare") or "",
+        "tema_proiect": app.get("tema_proiect") or app.get("description") or "",
+        "buget_estimat": app.get("budget_estimated") or 0,
+        "achizitii": len(app.get("achizitii", [])),
+    }
+    if call:
+        program_info.update({
+            "buget_sesiune": call.get("budget"),
+            "valoare_min": call.get("value_min"),
+            "valoare_max": call.get("value_max"),
+            "beneficiari_eligibili": call.get("beneficiaries", []),
+            "data_start": call.get("start_date"),
+            "data_sfarsit": call.get("end_date"),
+            "regiune": call.get("region"),
+        })
+    if guide_files:
+        program_info["ghiduri_incarcate"] = guide_files
+    if extracted_info:
+        program_info["date_extrase_din_linkuri"] = extracted_info[:2000]
+
+    # Get custom rules for eligibility agent
+    custom_rules = await db.agent_rules.find_one({"agent_id": "eligibilitate", "user_id": current_user["user_id"]}, {"_id": 0})
+    if custom_rules and custom_rules.get("reguli"):
+        program_info["reguli_custom_agent"] = custom_rules["reguli"]
+
+    result = await check_eligibility(firm_data, program_info)
+
+    report = {
+        "id": str(uuid.uuid4()), "type": "evaluation", "application_id": app_id,
+        "result": result.get("result", ""),
+        "firm_data_used": firm_data,
+        "program_info_used": program_info,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
     await db.compliance_reports.insert_one(report)
+
+    # Agent run log
+    await db.agent_runs.insert_one({
+        "id": str(uuid.uuid4()), "agent_id": "eligibilitate",
+        "application_id": app_id, "action": "evaluate",
+        "applied_rules": (custom_rules.get("reguli", []) if custom_rules else []),
+        "input": {"firm_fields": len(firm_data), "program_fields": len(program_info)},
+        "output": {"success": result.get("success", False)},
+        "timestamp": datetime.now(timezone.utc).isoformat(), "user_id": current_user["user_id"]
+    })
+
     report.pop("_id", None)
     return report
 
