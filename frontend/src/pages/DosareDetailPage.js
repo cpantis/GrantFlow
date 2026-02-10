@@ -136,8 +136,8 @@ export function DosareDetailPage() {
     if (achizitiiSearch.length < 2) return;
     try {
       const [s, a] = await Promise.all([
-        api.get(`/funding/sicap/search?q=${encodeURIComponent(achizitiiSearch)}`),
-        api.get(`/funding/afir/preturi?q=${encodeURIComponent(achizitiiSearch)}`)
+        api.get(`/v2/sicap/search?q=${encodeURIComponent(achizitiiSearch)}`),
+        api.get(`/v2/afir/preturi?q=${encodeURIComponent(achizitiiSearch)}`)
       ]);
       setSicapResults(s.data || []);
       setAfirResults(a.data || []);
