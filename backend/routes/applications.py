@@ -658,7 +658,7 @@ async def generate_draft(app_id: str, req: GenerateDraftRequest, current_user: d
     gen_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "generated")
     doc_entry = {"id": str(uuid.uuid4()), "filename": f"{tpl['label']}.pdf", "stored_name": pdf_file, "file_size": os.path.getsize(os.path.join(gen_dir, pdf_file)), "content_type": "application/pdf", "folder_group": "depunere", "status": "uploaded", "uploaded_at": datetime.now(timezone.utc).isoformat(), "uploaded_by": current_user["user_id"], "draft_id": draft["id"]}
     await db.applications.update_one({"id": app_id}, {"$push": {"documents": doc_entry}})
-    draft["pdf_url"] = f"/api/funding/drafts/download/{pdf_file}"
+    draft["pdf_url"] = f"/api/v2/drafts/download/{pdf_file}"
     await db.agent_runs.insert_one({"id": str(uuid.uuid4()), "agent_id": "redactor", "application_id": app_id, "action": "generate_draft", "input": {"template": tpl["label"]}, "output": {"draft_id": draft["id"]}, "applied_rules": draft.get("applied_rules", []), "timestamp": datetime.now(timezone.utc).isoformat(), "user_id": current_user["user_id"]})
     return draft
 
