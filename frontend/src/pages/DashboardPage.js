@@ -158,32 +158,15 @@ function MoltBot({ activeFirm }) {
   const [chatHistory, setChatHistory] = useState([]);
   const [chatMsg, setChatMsg] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
-  const [initialized, setInitialized] = useState(false);
 
-  // Auto-greet when firm is available
+  const DEFAULT_PROMPT = activeFirm
+    ? `Analizează profilul firmei ${activeFirm?.denumire} (CUI: ${activeFirm?.cui}, CAEN: ${activeFirm?.caen_principal?.cod || 'necunoscut'}, ${activeFirm?.judet || ''}, ${activeFirm?.nr_angajati || 'N/A'} angajați) și recomandă programele de finanțare europene și naționale disponibile acum. Pentru fiecare recomandare: numele programului, de ce se potrivește, buget estimat, termen.`
+    : 'Ce programe de finanțare sunt disponibile?';
+
+  // Pre-fill prompt but don't send automatically
   useEffect(() => {
-    if (activeFirm && !initialized) {
-      setInitialized(true);
-      autoGreet();
-    }
+    if (activeFirm) setChatMsg(DEFAULT_PROMPT);
   }, [activeFirm]);
-
-  const autoGreet = async () => {
-    setChatLoading(true);
-    try {
-      const res = await api.post('/agents/navigator/run', {
-        company_id: activeFirm?.id,
-        input_data: {
-          message: `Sunt consultant și lucrez cu firma ${activeFirm?.denumire} (CUI: ${activeFirm?.cui}, CAEN: ${activeFirm?.caen_principal?.cod || 'necunoscut'}, ${activeFirm?.judet || ''}, ${activeFirm?.nr_angajati || 'N/A'} angajați). Ce programe de finanțare europene și naționale sunt disponibile acum pentru această firmă? Analizează profilul firmei și recomandă cele mai potrivite programe active (PNRR, AFIR, POC, POR, Horizon Europe, etc.). Pentru fiecare recomandare, menționează: numele programului, de ce se potrivește, buget estimat, termen.`
-        }
-      });
-      const reply = res.data?.result?.response || res.data?.result || 'Nu am putut genera recomandări.';
-      setChatHistory([{ role: 'assistant', text: reply }]);
-    } catch (e) {
-      setChatHistory([{ role: 'assistant', text: 'Bun venit! Întreabă-mă despre programe de finanțare disponibile pentru firma ta.' }]);
-    }
-    setChatLoading(false);
-  };
 
   const sendMsg = async () => {
     if (!chatMsg.trim()) return;
