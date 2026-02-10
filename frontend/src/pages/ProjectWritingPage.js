@@ -223,7 +223,7 @@ export function ProjectWritingPage() {
               fd.append('titlu', e.target.files[0].name);
               fd.append('tip', 'ghid');
               try {
-                const res = await api.post('/funding/legislation/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                const res = await api.post(`/v2/applications/${id}/guide`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
                 setLegislation([...legislation, res.data]);
               } catch (err) { console.error(err); }
             }} />
