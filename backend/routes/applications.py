@@ -263,7 +263,7 @@ async def create_application(req: CreateApplicationRequest, current_user: dict =
 
 @router.get("/applications")
 async def list_applications(company_id: Optional[str] = None, current_user: dict = Depends(get_current_user)):
-    q = {}
+    q = {"created_by": current_user["user_id"]}
     if company_id: q["company_id"] = company_id
     apps = await db.applications.find(q, {"_id": 0}).to_list(100)
     return apps
