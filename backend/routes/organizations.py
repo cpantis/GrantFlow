@@ -155,9 +155,9 @@ async def create_organization_manual(
     if not cui_extracted:
         cui_extracted = "NECUNOSCUT"
 
-    existing = await db.organizations.find_one({"cui": cui_extracted})
+    existing = await db.organizations.find_one({"cui": cui_extracted, "members.user_id": current_user["user_id"]})
     if existing and cui_extracted != "NECUNOSCUT":
-        raise HTTPException(status_code=400, detail=f"Firma cu CUI {cui_extracted} există deja")
+        raise HTTPException(status_code=400, detail=f"Aveți deja firma cu CUI {cui_extracted} înregistrată")
 
     org_id = str(uuid.uuid4())
     org_doc = {
