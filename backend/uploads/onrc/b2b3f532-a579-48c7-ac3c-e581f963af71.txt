@@ -1,0 +1,9 @@
+CARTE DE IDENTITATE
+Seria RD Număr 789012
+CNP: 1900510400234
+Nume: NORDIC
+Prenume: ION
+Data naștere: 10.05.1990
+Domiciliu: Str. Nordului nr. 15, București
+Emis de: SPCEP S2
+Data expirare: 10.05.2030
