@@ -583,9 +583,10 @@ export function DosareDetailPage() {
                     </div>
                     {d.ocr_data?.extracted_fields && Object.keys(d.ocr_data.extracted_fields).length > 0 && (
                       <div className="mt-2 pl-6 text-xs text-muted-foreground border-t pt-2 flex flex-wrap gap-x-4 gap-y-1">
-                        {Object.entries(d.ocr_data.extracted_fields).slice(0, 5).map(([k, v]) => (
-                          <span key={k}><strong className="text-foreground/70">{k.replace(/_/g, ' ')}:</strong> {String(v).slice(0, 40)}</span>
-                        ))}
+                        {Object.entries(d.ocr_data.extracted_fields).slice(0, 5).map(([k, v]) => {
+                          const display = typeof v === 'object' ? JSON.stringify(v) : String(v).slice(0, 40);
+                          return <span key={k}><strong className="text-foreground/70">{k.replace(/_/g, ' ')}:</strong> {display}</span>;
+                        })}
                         {Object.keys(d.ocr_data.extracted_fields).length > 5 && <span>+{Object.keys(d.ocr_data.extracted_fields).length - 5} câmpuri</span>}
                       </div>
                     )}
