@@ -32,9 +32,9 @@ class CreateAuthorizationRequest(BaseModel):
 @router.post("")
 async def create_organization(req: CreateOrgRequest, current_user: dict = Depends(get_current_user)):
     cui_clean = req.cui.strip().replace("RO", "").replace("ro", "").strip()
-    existing = await db.organizations.find_one({"cui": cui_clean})
+    existing = await db.organizations.find_one({"cui": cui_clean, "members.user_id": current_user["user_id"]})
     if existing:
-        raise HTTPException(status_code=400, detail="Firma cu acest CUI există deja în platformă")
+        raise HTTPException(status_code=400, detail="Aveți deja această firmă înregistrată")
     onrc_data = await lookup_cui(cui_clean)
     if not onrc_data["success"]:
         detail = onrc_data.get("error", "CUI invalid sau indisponibil")
