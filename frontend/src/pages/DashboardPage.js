@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFirm } from '@/contexts/FirmContext';
@@ -159,14 +159,16 @@ function MoltBot({ activeFirm }) {
   const [chatMsg, setChatMsg] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
 
-  const DEFAULT_PROMPT = activeFirm
-    ? `Analizează profilul firmei ${activeFirm?.denumire} (CUI: ${activeFirm?.cui}, CAEN: ${activeFirm?.caen_principal?.cod || 'necunoscut'}, ${activeFirm?.judet || ''}, ${activeFirm?.nr_angajati || 'N/A'} angajați) și recomandă programele de finanțare europene și naționale disponibile acum. Pentru fiecare recomandare: numele programului, de ce se potrivește, buget estimat, termen.`
-    : 'Ce programe de finanțare sunt disponibile?';
+  const defaultPrompt = useMemo(() => {
+    return activeFirm
+      ? `Analizează profilul firmei ${activeFirm?.denumire} (CUI: ${activeFirm?.cui}, CAEN: ${activeFirm?.caen_principal?.cod || 'necunoscut'}, ${activeFirm?.judet || ''}, ${activeFirm?.nr_angajati || 'N/A'} angajați) și recomandă programele de finanțare europene și naționale disponibile acum. Pentru fiecare recomandare: numele programului, de ce se potrivește, buget estimat, termen.`
+      : 'Ce programe de finanțare sunt disponibile?';
+  }, [activeFirm]);
 
   // Pre-fill prompt but don't send automatically
   useEffect(() => {
-    if (activeFirm) setChatMsg(DEFAULT_PROMPT);
-  }, [activeFirm]);
+    if (activeFirm) setChatMsg(defaultPrompt);
+  }, [activeFirm, defaultPrompt]);
 
   const sendMsg = async () => {
     if (!chatMsg.trim()) return;

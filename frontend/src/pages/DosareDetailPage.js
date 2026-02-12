@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,7 +43,7 @@ export function DosareDetailPage() {
   const [chatHistory, setChatHistory] = useState([]);
   const [chatLoading, setChatLoading] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const [aRes, tRes] = await Promise.all([api.get(`/v2/applications/${id}`), api.get('/v2/templates')]);
       const a = aRes.data;
@@ -54,10 +54,13 @@ export function DosareDetailPage() {
         setConfig({ tip_proiect: a.tip_proiect || '', locatie: a.locatie_implementare || '', judet: a.judet_implementare || '', tema: a.tema_proiect || '', buget: a.budget_estimated || '' });
         setAchizitii(a.achizitii || []);
       }
-    } catch (e) { console.error(e); }
-    setLoading(false);
-  };
-  useEffect(() => { load(); }, [id]);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+  useEffect(() => { load(); }, [load]);
 
   const transition = async (newState) => {
     setTransitioning(true);
@@ -211,7 +214,7 @@ export function DosareDetailPage() {
           </div>
           <p className="text-muted-foreground text-sm">{app.company_name} &middot; {app.program_name} &middot; {app.call_name}</p>
         </div>
-        <a href={`${process.env.REACT_APP_BACKEND_URL}/api/v2/applications/${id}/export`} target="_blank" rel="noopener noreferrer">
+        <a href={`${(process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_BACKEND_URL)}/api/v2/applications/${id}/export`} target="_blank" rel="noopener noreferrer">
           <Button variant="outline" data-testid="export-zip-btn"><Download className="w-4 h-4 mr-2" />Export ZIP</Button>
         </a>
       </div>
@@ -649,7 +652,7 @@ export function DosareDetailPage() {
               <Card key={d.id} className="bg-card border-border"><CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2">
                 <span className="text-sm font-mono text-muted-foreground w-6">{String(idx + 1).padStart(2, '0')}.</span>
                 <CheckCircle className="w-4 h-4 text-green-500" />{d.template_label}
-                {d.pdf_url && <a href={`${process.env.REACT_APP_BACKEND_URL}${d.pdf_url}`} target="_blank" rel="noopener noreferrer" className="ml-auto"><Button size="sm" variant="outline"><Download className="w-3 h-3 mr-1" />PDF</Button></a>}
+                {d.pdf_url && <a href={`${(process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_BACKEND_URL)}${d.pdf_url}`} target="_blank" rel="noopener noreferrer" className="ml-auto"><Button size="sm" variant="outline"><Download className="w-3 h-3 mr-1" />PDF</Button></a>}
               </CardTitle></CardHeader>
               <CardContent className="max-h-48 overflow-y-auto border-t pt-2"><AiMessage text={d.content} /></CardContent></Card>
             ))}

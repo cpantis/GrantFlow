@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import api from '@/lib/api';
 import { useFirm } from '@/contexts/FirmContext';
@@ -39,7 +39,7 @@ export function ProjectsPage() {
   const [error, setError] = useState('');
   const { activeFirm } = useFirm();
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const params = activeFirm ? `?organizatie_id=${activeFirm.id}` : '';
       const [pRes, oRes] = await Promise.all([api.get(`/projects${params}`), api.get('/organizations')]);
@@ -47,9 +47,9 @@ export function ProjectsPage() {
       setOrgs(oRes.data || []);
     } catch (e) { console.error(e); }
     setLoading(false);
-  };
+  }, [activeFirm]);
 
-  useEffect(() => { load(); }, [activeFirm]);
+  useEffect(() => { load(); }, [load]);
 
   const handleCreate = async (e) => {
     e.preventDefault();

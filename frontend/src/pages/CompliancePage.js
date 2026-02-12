@@ -18,16 +18,24 @@ export function CompliancePage() {
   const { activeFirm } = useFirm();
 
   useEffect(() => {
+    let cancelled = false;
     const load = async () => {
+      setLoading(true);
       try {
         const params = activeFirm ? `?organizatie_id=${activeFirm.id}` : '';
         const res = await api.get(`/projects${params}`);
-        setProjects(res.data || []);
-      } catch (e) { console.error(e); }
-      setLoading(false);
+        if (!cancelled) setProjects(res.data || []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
     load();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [activeFirm]);
 
   const sendChat = async () => {
     if (!chatMsg.trim()) return;

@@ -375,7 +375,7 @@ export function ProjectDetailPage() {
                       {d.template_filename && <Badge variant="outline" className="text-xs">din: {d.template_filename}</Badge>}
                       <div className="ml-auto flex items-center gap-2">
                         {d.pdf_url && (
-                          <a href={`${process.env.REACT_APP_BACKEND_URL}${d.pdf_url}`} target="_blank" rel="noopener noreferrer" data-testid={`download-pdf-${d.id}`}>
+                          <a href={`${(process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_BACKEND_URL)}${d.pdf_url}`} target="_blank" rel="noopener noreferrer" data-testid={`download-pdf-${d.id}`}>
                             <Button size="sm" variant="outline"><Download className="w-3.5 h-3.5 mr-1.5" />PDF</Button>
                           </a>
                         )}

@@ -23,6 +23,7 @@ export function DocumentsPage() {
   useEffect(() => {
     const load = async () => {
       try {
+        setLoading(true);
         const params = activeFirm ? `?company_id=${activeFirm.id}` : '';
         const res = await api.get(`/v2/applications${params}`);
         setApplications(res.data || []);
@@ -34,7 +35,7 @@ export function DocumentsPage() {
       setLoading(false);
     };
     load();
-  }, [activeFirm]);
+  }, [activeFirm, selectedApp]);
 
   useEffect(() => {
     if (!selectedApp) { setAppData(null); return; }
@@ -166,7 +167,15 @@ export function DocumentsPage() {
                             <div className="flex items-center gap-2">
                               {d.ocr_status === 'completed' && <Badge className="text-xs rounded-full bg-green-50 text-green-600"><CheckCircle className="w-3 h-3 mr-1" />OCR</Badge>}
                               {d.ocr_status === 'needs_review' && <Badge className="text-xs rounded-full bg-amber-50 text-amber-600"><AlertTriangle className="w-3 h-3 mr-1" />Revizuire</Badge>}
-                              {d.pdf_filename && <a href={`${process.env.REACT_APP_BACKEND_URL}/api/v2/drafts/download/${d.pdf_filename}`} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="sm" className="h-7 w-7 p-0"><Download className="w-3.5 h-3.5" /></Button></a>}
+                              {d.pdf_filename && (
+                                <a
+                                  href={`${(process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_BACKEND_URL)}/api/v2/drafts/download/${d.pdf_filename}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0"><Download className="w-3.5 h-3.5" /></Button>
+                                </a>
+                              )}
                               <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10 h-7 w-7 p-0" onClick={() => deleteDoc(d.id)} data-testid={`del-${d.id}`}><X className="w-3.5 h-3.5" /></Button>
                             </div>
                           </div>
